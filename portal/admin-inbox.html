@@ -10,6 +10,12 @@
   <link rel="stylesheet" href="portal2.css" />
 </head>
 <body>
+<!-- MOBILE HEADER -->
+<div class="portal-mobile-header">
+  <div class="pmh-logo">ON-<span>Q</span>25 <span style="font-size:0.55rem;font-weight:600;letter-spacing:0.1em;color:var(--gray);vertical-align:middle;">ADMIN</span></div>
+  <div class="pmh-user"><div class="pmh-avatar" id="mobileInitial">?</div></div>
+</div>
+
 <div class="portal-layout">
 
   <aside class="sidebar">
@@ -94,6 +100,14 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="portal-mobile-nav admin-nav">
+  <a href="/portal/admin" class="pmn-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clients</a>
+  <a href="/portal/admin-inbox" class="pmn-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Inbox</a>
+  <a href="/portal/admin-team" class="pmn-item"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>Team</a>
+</nav>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>

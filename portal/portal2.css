@@ -627,13 +627,78 @@ td.td-main { color: var(--white); font-weight: 500; }
 /* ===== GRID HELPERS ===== */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
+/* ===== MOBILE BOTTOM NAV ===== */
+.portal-mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 6px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 100;
+  grid-template-columns: repeat(5, 1fr);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.portal-mobile-nav.admin-nav { grid-template-columns: repeat(3, 1fr); }
+.pmn-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  padding: 8px 4px 4px;
+  color: var(--gray); text-decoration: none;
+  font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: color 0.18s;
+  position: relative;
+}
+.pmn-item.active { color: var(--blue-lt); }
+.pmn-item.active::before {
+  content: '';
+  position: absolute; top: 0; left: 25%; right: 25%;
+  height: 2px; background: var(--blue-lt); border-radius: 0 0 2px 2px;
+}
+.pmn-item svg { opacity: 0.7; }
+.pmn-item.active svg { opacity: 1; }
+
+/* ===== MOBILE HEADER ===== */
+.portal-mobile-header {
+  display: none;
+  position: sticky; top: 0; z-index: 50;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  align-items: center; justify-content: space-between;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.pmh-logo {
+  font-size: 1.1rem; font-weight: 800;
+  letter-spacing: -0.02em; color: var(--white);
+}
+.pmh-logo span { color: var(--blue-lt); }
+.pmh-user {
+  display: flex; align-items: center; gap: 8px;
+}
+.pmh-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: var(--white);
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
   .portal-layout { grid-template-columns: 1fr; }
   .sidebar { display: none; }
-  .portal-main { margin-left: 0; padding: 20px 16px; }
+  .portal-main { margin-left: 0; padding: 20px 16px 90px; }
   .stats-row { grid-template-columns: 1fr 1fr; }
   .grid-2 { grid-template-columns: 1fr; }
+  .portal-mobile-nav { display: grid; }
+  .portal-mobile-header { display: flex; }
+  /* Inbox layout stacks on mobile */
+  .inbox-layout { grid-template-columns: 1fr; height: auto; }
+  .inbox-list { max-height: 40vh; border-right: none; border-bottom: 1px solid var(--border); }
+  .inbox-thread-panel { min-height: 50vh; }
 }
 
 /* ===== BACKWARD-COMPAT ALIASES (HTML uses these names) ===== */
