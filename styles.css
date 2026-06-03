@@ -171,7 +171,7 @@ p  { color: var(--gray); line-height: 1.75; }
   min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   padding-top: 68px;
-  background: linear-gradient(180deg, #000 60%, #04042a 100%);
+  background: linear-gradient(180deg, #000 50%, #050520 100%);
 }
 .hero-content {
   text-align: center;
@@ -187,7 +187,7 @@ p  { color: var(--gray); line-height: 1.75; }
 }
 
 /* ===== WHO WE ARE ===== */
-.who-we-are { background: linear-gradient(180deg, #04042a 0%, #07073a 100%); }
+.who-we-are { background: linear-gradient(180deg, #050520 0%, #080830 100%); }
 .who-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -209,7 +209,7 @@ p  { color: var(--gray); line-height: 1.75; }
 .who-text p { margin-bottom: 32px; font-size: 1rem; }
 
 /* ===== SERVICES ===== */
-.services-section { background: linear-gradient(180deg, #07073a 0%, #0b0b2e 100%); padding: 0 0 100px; }
+.services-section { background: linear-gradient(180deg, #080830 0%, #0c0c38 100%); padding: 0 0 100px; }
 .services-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -259,7 +259,7 @@ p  { color: var(--gray); line-height: 1.75; }
 
 /* ===== APPROACH ===== */
 .approach-section {
-  background: linear-gradient(180deg, #0b0b2e 0%, #0e0e3a 50%, #1a1a5e 100%);
+  background: linear-gradient(180deg, #0c0c38 0%, #0f0f42 50%, #121250 100%);
   padding: 100px 0;
 }
 .approach-header {
@@ -388,25 +388,25 @@ p  { color: var(--gray); line-height: 1.75; }
 
 /* ===== TESTIMONIAL ===== */
 .testimonial-section {
-  background: linear-gradient(180deg, #3d4fd6 0%, #2a2faa 50%, #1a1060 100%);
+  background: linear-gradient(180deg, #121250 0%, #0d0d3a 50%, #07071e 100%);
   padding: 100px 0;
 }
 .testimonial-header {
   text-align: center;
   margin-bottom: 48px;
 }
-.testimonial-header h2 { color: #000; font-size: clamp(1.8rem, 4vw, 3rem); }
+.testimonial-header h2 { color: var(--white); font-size: clamp(1.8rem, 4vw, 3rem); }
 .testimonial-block {
   max-width: 800px;
   margin: 0 auto;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
   padding: 64px 56px;
-  background: rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.04);
 }
 .testimonial-block blockquote {
   font-size: 1.1rem;
-  color: #000;
+  color: var(--white);
   line-height: 1.75;
   text-align: center;
   margin-bottom: 40px;
@@ -419,15 +419,15 @@ p  { color: var(--gray); line-height: 1.75; }
 }
 .testimonial-dash {
   font-size: 1.5rem;
-  color: #000;
-  opacity: 0.4;
+  color: var(--gray);
+  opacity: 0.6;
 }
-.t-name { font-weight: 600; color: #000; font-size: 0.95rem; }
-.t-company { font-size: 0.85rem; color: rgba(0,0,0,0.55); }
+.t-name { font-weight: 600; color: var(--white); font-size: 0.95rem; }
+.t-company { font-size: 0.85rem; color: var(--gray); }
 
 /* ===== FOOTER ===== */
 .footer {
-  background: linear-gradient(180deg, #1a1060 0%, #0a0520 30%, #000 70%);
+  background: linear-gradient(180deg, #07071e 0%, #040412 30%, #000 70%);
   border-top: none;
   padding: 72px 0 0;
 }
