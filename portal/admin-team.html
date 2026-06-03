@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Team — ON-Q25 Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="portal2.css" />
+</head>
+<body>
+<div class="portal-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">ON-<span>Q</span>25</div>
+      <div class="sidebar-logo-tag">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="admin.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        All Clients
+      </a>
+      <a href="admin-inbox.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Inbox
+      </a>
+      <a href="admin-team.html" class="active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        Team
+      </a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="/index.html" class="sidebar-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to ON-Q25.com
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="navInitial">?</div>
+        <span class="sidebar-user-name" id="navName">Loading…</span>
+        <button class="sidebar-signout" onclick="signOut()" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <h1>Team</h1>
+        <p>Manage who has admin access to the ON-Q25 portal.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Team Member
+      </button>
+    </div>
+
+    <div id="teamGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+    <div id="emptyTeam" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">👤</div>
+      <h3>No team members yet</h3>
+      <p>Add yourself and your co-founder using the button above.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ADD TEAM MEMBER MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <h2>Add Team Member</h2>
+    <p style="font-size:0.8rem;color:var(--gray);margin-bottom:20px;">
+      Creates an admin account. They'll log in at <strong style="color:var(--off-white)">portal/login.html</strong> using these credentials.
+    </p>
+    <div class="form-group">
+      <label>Full Name *</label>
+      <input class="form-input" id="addName" placeholder="e.g. Da'quan Conway" />
+    </div>
+    <div class="form-group">
+      <label>Email *</label>
+      <input class="form-input" type="email" id="addEmail" placeholder="name@on-q25.com" />
+    </div>
+    <div class="form-group">
+      <label>Password *</label>
+      <div style="position:relative;">
+        <input class="form-input" type="password" id="addPassword" placeholder="Min. 8 characters" style="padding-right:44px;" />
+        <button type="button" onclick="togglePw()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;padding:4px;">
+          <svg id="pwIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="addErr" style="color:#f87171;font-size:0.8rem;margin-bottom:12px;display:none;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="addBtn" onclick="addTeamMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+let currentAdminId = null;
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function openModal()  { document.getElementById('addModal').classList.add('open'); document.getElementById('addName').focus(); }
+function closeModal() {
+  document.getElementById('addModal').classList.remove('open');
+  document.getElementById('addName').value = '';
+  document.getElementById('addEmail').value = '';
+  document.getElementById('addPassword').value = '';
+  document.getElementById('addErr').style.display = 'none';
+}
+
+function togglePw() {
+  const inp = document.getElementById('addPassword');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+async function loadTeam() {
+  const { data: team, error } = await supabase
+    .from('profiles').select('*').eq('is_admin', true).order('created_at');
+
+  if (error) { console.error(error); return; }
+
+  if (!team?.length) {
+    document.getElementById('emptyTeam').style.display = 'block';
+    document.getElementById('teamGrid').innerHTML = '';
+    return;
+  }
+  document.getElementById('emptyTeam').style.display = 'none';
+
+  document.getElementById('teamGrid').innerHTML = team.map(m => {
+    const initials = (m.full_name || '?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const isSelf = m.id === currentAdminId;
+    return `
+      <div class="team-card">
+        <div class="team-card-avatar">${initials}</div>
+        <div class="team-card-info">
+          <div class="team-card-name">${m.full_name || 'Unnamed'} ${isSelf ? '<span class="badge badge-blue" style="font-size:0.6rem;vertical-align:middle;">You</span>' : ''}</div>
+          <div class="team-card-meta">Admin · Joined ${formatDate(m.created_at)}</div>
+        </div>
+        ${!isSelf ? `
+        <button class="btn btn-danger btn-sm" style="margin-left:auto;flex-shrink:0;"
+          onclick="removeAdmin('${m.id}','${(m.full_name||'this member').replace(/'/g,"\\'")}')">
+          Remove
+        </button>` : `<span class="badge badge-green" style="margin-left:auto;flex-shrink:0;">Active</span>`}
+      </div>`;
+  }).join('');
+}
+
+async function addTeamMember() {
+  const name  = document.getElementById('addName').value.trim();
+  const email = document.getElementById('addEmail').value.trim();
+  const pw    = document.getElementById('addPassword').value.trim();
+  const err   = document.getElementById('addErr');
+  const btn   = document.getElementById('addBtn');
+  err.style.display = 'none';
+
+  if (!name || !email || !pw) {
+    err.textContent = 'Name, email, and password are all required.';
+    err.style.display = 'block'; return;
+  }
+  if (pw.length < 8) {
+    err.textContent = 'Password must be at least 8 characters.';
+    err.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Adding…';
+
+  const { data, error: signUpErr } = await supabase.auth.signUp({
+    email, password: pw,
+    options: { data: { full_name: name } }
+  });
+
+  if (signUpErr) {
+    err.textContent = signUpErr.message;
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Add Member';
+    return;
+  }
+
+  if (data.user) {
+    const { error: profileErr } = await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: name,
+      is_admin: true
+    });
+    if (profileErr) {
+      err.textContent = 'Account created but could not set admin access. Run: UPDATE profiles SET is_admin=true WHERE id=\'' + data.user.id + '\' in Supabase SQL.';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Add Member';
+      return;
+    }
+  }
+
+  btn.disabled = false; btn.textContent = 'Add Member';
+  closeModal();
+  showToast(`${name} added to the team`);
+  loadTeam();
+}
+
+async function removeAdmin(id, name) {
+  if (!confirm(`Remove ${name} from the admin team? They'll lose access to this dashboard.`)) return;
+  await supabase.from('profiles').update({ is_admin: false }).eq('id', id);
+  showToast(`${name} removed from team`);
+  loadTeam();
+}
+
+(async () => {
+  const session = await requireAuth(); if (!session) return;
+  const profile = await getProfile(session.user.id);
+  if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
+  currentAdminId = session.user.id;
+  setNavUser(profile, session);
+  loadTeam();
+})();
+</script>
+
+<style>
+.team-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.18s;
+}
+.team-card:hover { border-color: var(--border-md); }
+.team-card-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700; flex-shrink: 0;
+}
+.team-card-name { font-weight: 700; font-size: 0.95rem; color: var(--white); }
+.team-card-meta { font-size: 0.75rem; color: var(--gray); margin-top: 2px; }
+</style>
+</body>
+</html>

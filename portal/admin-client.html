@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client — ON-Q25 Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="portal2.css" />
+</head>
+<body>
+<div class="portal-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">ON-<span>Q</span>25</div>
+      <div class="sidebar-logo-tag">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="admin.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        All Clients
+      </a>
+      <a href="admin-inbox.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Inbox
+      </a>
+      <a href="admin-team.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        Team
+      </a>
+      <a href="#" class="active" id="sidebarClientName">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Client
+      </a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="/index.html" class="sidebar-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to ON-Q25.com
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="navInitial">?</div>
+        <span class="sidebar-user-name" id="navName">Loading…</span>
+        <button class="sidebar-signout" onclick="signOut()" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <!-- CLIENT HEADER -->
+    <div class="client-detail-header" id="clientHeader">
+      <div class="client-detail-avatar" id="clientAvatar">?</div>
+      <div>
+        <h1 id="clientFullName">Loading…</h1>
+        <p id="clientBizName" style="color:var(--gray);font-size:0.85rem;"></p>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('projects')">Projects</button>
+      <button class="admin-tab" onclick="switchTab('messages')">Messages</button>
+      <button class="admin-tab" onclick="switchTab('schedule')">Schedule</button>
+      <button class="admin-tab" onclick="switchTab('files')">Files</button>
+    </div>
+
+    <!-- PROJECTS TAB -->
+    <div id="tab-projects" class="tab-panel">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openModal('projectModal')">+ Add Project</button>
+      </div>
+      <div id="projectsList"></div>
+    </div>
+
+    <!-- MESSAGES TAB -->
+    <div id="tab-messages" class="tab-panel" style="display:none;">
+      <div class="card">
+        <div class="message-thread" id="messageThread"></div>
+        <div class="message-input-row" style="margin-top:14px;">
+          <textarea id="msgInput" placeholder="Reply as ON-Q25…" onkeydown="handleMsgKey(event)"></textarea>
+          <button class="btn btn-primary" onclick="sendAdminMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE TAB -->
+    <div id="tab-schedule" class="tab-panel" style="display:none;">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openModal('scheduleModal')">+ Add Event</button>
+      </div>
+      <div class="card" id="scheduleList"></div>
+    </div>
+
+    <!-- FILES TAB -->
+    <div id="tab-files" class="tab-panel" style="display:none;">
+      <div id="fileGrid" class="file-grid"></div>
+      <div id="emptyFiles" class="empty-state">
+        <div class="empty-state-icon">📂</div>
+        <h3>No files uploaded</h3>
+        <p>The client hasn't uploaded any files yet.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal-box">
+    <h2>Add Project</h2>
+    <div class="form-group">
+      <label>Project Name *</label>
+      <input class="form-input" id="projName" placeholder="e.g. Brand Identity Package" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea class="form-textarea" id="projDesc" placeholder="Brief summary of the project…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select class="form-select" id="projStatus">
+        <option value="not_started">Not Started</option>
+        <option value="in_progress" selected>In Progress</option>
+        <option value="review">In Review</option>
+        <option value="complete">Complete</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('projectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProject()">Add Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SCHEDULE MODAL -->
+<div class="modal-overlay" id="scheduleModal">
+  <div class="modal-box">
+    <h2>Add Event</h2>
+    <div class="form-group">
+      <label>Title *</label>
+      <input class="form-input" id="evTitle" placeholder="e.g. Brand Review Call" />
+    </div>
+    <div class="form-group">
+      <label>Date &amp; Time *</label>
+      <input class="form-input" type="datetime-local" id="evDate" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea class="form-textarea" id="evDesc" placeholder="Optional notes…" style="min-height:80px;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('scheduleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEvent()">Save Event</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+const params   = new URLSearchParams(location.search);
+const clientId = params.get('id');
+let currentTab = 'projects';
+
+const statusProgress = { not_started:5, in_progress:50, review:80, complete:100 };
+const statusLabel    = { not_started:'Not Started', in_progress:'In Progress', review:'In Review', complete:'Complete' };
+const statusBadge    = { not_started:'badge-gray', in_progress:'badge-blue', review:'badge-yellow', complete:'badge-green' };
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById(`tab-${tab}`).style.display = 'block';
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  if (tab === 'messages') loadMessages();
+  if (tab === 'schedule')  loadSchedule();
+  if (tab === 'files')     loadFiles();
+  if (tab === 'projects')  loadProjects();
+}
+
+// ── PROJECTS ─────────────────────────────────────────────────────────────────
+async function loadProjects() {
+  const { data } = await supabase.from('projects').select('*').eq('client_id', clientId).order('created_at', {ascending:false});
+  const el = document.getElementById('projectsList');
+  if (!data?.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚀</div><h3>No projects yet</h3><p>Add the first project for this client.</p></div>`;
+    return;
+  }
+  el.innerHTML = data.map(p => `
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-weight:700;font-size:0.95rem;">${p.name}</div>
+          ${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:3px;">${p.description}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <select class="form-select" style="width:auto;padding:5px 10px;font-size:0.8rem;" onchange="updateProjectStatus('${p.id}', this.value)">
+            <option value="not_started" ${p.status==='not_started'?'selected':''}>Not Started</option>
+            <option value="in_progress" ${p.status==='in_progress'?'selected':''}>In Progress</option>
+            <option value="review"      ${p.status==='review'?'selected':''}>In Review</option>
+            <option value="complete"    ${p.status==='complete'?'selected':''}>Complete</option>
+          </select>
+          <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--gray);margin-bottom:5px;">
+          <span><span class="badge ${statusBadge[p.status]}">${statusLabel[p.status]}</span></span>
+          <span>${statusProgress[p.status]}%</span>
+        </div>
+        <div class="progress-bar-wrap" style="max-width:100%;height:5px;">
+          <div class="progress-bar-fill" style="width:${statusProgress[p.status]}%"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function addProject() {
+  const name   = document.getElementById('projName').value.trim();
+  const desc   = document.getElementById('projDesc').value.trim();
+  const status = document.getElementById('projStatus').value;
+  if (!name) return;
+  await supabase.from('projects').insert({ client_id: clientId, name, description: desc||null, status });
+  closeModal('projectModal');
+  document.getElementById('projName').value = '';
+  document.getElementById('projDesc').value = '';
+  showToast('Project added');
+  loadProjects();
+}
+
+async function updateProjectStatus(id, status) {
+  await supabase.from('projects').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+  showToast('Status updated');
+  loadProjects();
+}
+
+async function deleteProject(id) {
+  if (!confirm('Delete this project?')) return;
+  await supabase.from('projects').delete().eq('id', id);
+  showToast('Project deleted');
+  loadProjects();
+}
+
+// ── MESSAGES ─────────────────────────────────────────────────────────────────
+async function loadMessages() {
+  const { data } = await supabase.from('messages').select('*').eq('client_id', clientId).order('created_at');
+  const thread = document.getElementById('messageThread');
+  if (!data?.length) {
+    thread.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💬</div><p>No messages yet. Start the conversation.</p></div>`;
+    return;
+  }
+  thread.innerHTML = data.map(m => `
+    <div class="message-bubble ${m.is_from_admin ? 'from-client' : 'from-admin'}">
+      <div class="bubble-content">${escHtml(m.content)}</div>
+      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${formatDate(m.created_at)}</div>
+    </div>`).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+async function sendAdminMessage() {
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  const { data: { session } } = await supabase.auth.getSession();
+  await supabase.from('messages').insert({ client_id: clientId, content, author_id: session.user.id, is_from_admin: true });
+  loadMessages();
+}
+
+function handleMsgKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAdminMessage(); }
+}
+
+// ── SCHEDULE ─────────────────────────────────────────────────────────────────
+async function loadSchedule() {
+  const { data } = await supabase.from('schedule_items').select('*').eq('client_id', clientId).order('scheduled_date');
+  const el = document.getElementById('scheduleList');
+  if (!data?.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><h3>No events</h3><p>Add a meeting or deadline for this client.</p></div>`;
+    return;
+  }
+  const statusBadgeMap = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
+  el.innerHTML = data.map(e => {
+    const d = new Date(e.scheduled_date);
+    return `<div class="schedule-item">
+      <div class="schedule-date-badge">
+        <div class="month">${d.toLocaleString('en-US',{month:'short'})}</div>
+        <div class="day">${d.getDate()}</div>
+      </div>
+      <div class="schedule-details" style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="schedule-title">${e.title}</div>
+          <span class="badge ${statusBadgeMap[e.status]||'badge-gray'}">${e.status}</span>
+        </div>
+        <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
+        ${e.description ? `<div class="schedule-desc">${e.description}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;">
+        ${e.status==='upcoming' ? `<button class="btn btn-outline btn-sm" onclick="markEventDone('${e.id}')">Done</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  const date  = document.getElementById('evDate').value;
+  const desc  = document.getElementById('evDesc').value.trim();
+  if (!title || !date) return;
+  await supabase.from('schedule_items').insert({ client_id: clientId, title, scheduled_date: date, description: desc||null, status:'upcoming' });
+  closeModal('scheduleModal');
+  document.getElementById('evTitle').value = '';
+  document.getElementById('evDate').value  = '';
+  document.getElementById('evDesc').value  = '';
+  showToast('Event added');
+  loadSchedule();
+}
+
+async function markEventDone(id) {
+  await supabase.from('schedule_items').update({ status:'completed' }).eq('id', id);
+  showToast('Marked complete');
+  loadSchedule();
+}
+
+async function deleteEvent(id) {
+  if (!confirm('Delete this event?')) return;
+  await supabase.from('schedule_items').delete().eq('id', id);
+  showToast('Event deleted');
+  loadSchedule();
+}
+
+// ── FILES ─────────────────────────────────────────────────────────────────────
+async function loadFiles() {
+  const { data } = await supabase.from('files').select('*').eq('client_id', clientId).order('uploaded_at', {ascending:false});
+  const grid  = document.getElementById('fileGrid');
+  const empty = document.getElementById('emptyFiles');
+  if (!data?.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = data.map(f => {
+    const { data: urlData } = supabase.storage.from('client-files').getPublicUrl(f.storage_path);
+    const url  = urlData?.publicUrl;
+    const icon = f.file_type?.startsWith('image/') ? `<img src="${url}" alt="${f.filename}" loading="lazy"/>` :
+                 f.file_type?.startsWith('video/') ? `<video src="${url}" muted></video>` : '📄';
+    return `<div class="file-item">
+      <div class="file-thumb">${typeof icon === 'string' && icon.startsWith('<') ? icon : `<span style="font-size:2rem">${icon}</span>`}</div>
+      <div class="file-info">
+        <div class="file-name" title="${f.filename}">${f.filename}</div>
+        <div class="file-meta">${formatBytes(f.file_size)} · ${formatDate(f.uploaded_at)}</div>
+        <div class="file-actions">
+          <a href="${url}" target="_blank" class="btn btn-outline btn-sm">View</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+(async () => {
+  if (!clientId) { location.href = 'admin.html'; return; }
+  const session = await requireAuth();
+  if (!session) return;
+  const adminProfile = await getProfile(session.user.id);
+  if (!adminProfile?.is_admin) { location.href = 'dashboard.html'; return; }
+  setNavUser(adminProfile, session);
+
+  // Load client profile
+  const { data: client } = await supabase.from('profiles').select('*').eq('id', clientId).single();
+  if (!client) { location.href = 'admin.html'; return; }
+
+  const initials = (client.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('clientAvatar').textContent = initials;
+  document.getElementById('clientFullName').textContent = client.full_name || 'Unnamed Client';
+  document.getElementById('clientBizName').textContent  = client.business_name || '';
+  document.getElementById('sidebarClientName').innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>${client.full_name||'Client'}`;
+  document.title = `${client.full_name || 'Client'} — ON-Q25 Admin`;
+
+  loadProjects();
+})();
+</script>
+
+<style>
+.client-detail-header {
+  display: flex; align-items: center; gap: 16px;
+  margin-bottom: 24px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.client-detail-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 800; flex-shrink: 0;
+}
+.admin-tabs {
+  display: flex; gap: 4px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 4px;
+  margin-bottom: 20px; width: fit-content;
+}
+.admin-tab {
+  background: none; border: none; color: var(--gray);
+  font-size: 0.825rem; font-weight: 600; font-family: var(--font);
+  padding: 7px 18px; border-radius: 7px; cursor: pointer;
+  transition: all 0.18s;
+}
+.admin-tab:hover { color: var(--white); background: var(--surface2); }
+.admin-tab.active { background: var(--blue); color: var(--white); }
+</style>
+</body>
+</html>

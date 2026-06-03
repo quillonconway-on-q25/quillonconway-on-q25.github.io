@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inbox — ON-Q25 Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="portal2.css" />
+</head>
+<body>
+<div class="portal-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">ON-<span>Q</span>25</div>
+      <div class="sidebar-logo-tag">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="admin.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        All Clients
+      </a>
+      <a href="admin-inbox.html" class="active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Inbox
+      </a>
+      <a href="admin-team.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        Team
+      </a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="/index.html" class="sidebar-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to ON-Q25.com
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="navInitial">?</div>
+        <span class="sidebar-user-name" id="navName">Loading…</span>
+        <button class="sidebar-signout" onclick="signOut()" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portal-main" style="display:flex;flex-direction:column;">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <h1>Inbox</h1>
+        <p>All client conversations in one place.</p>
+      </div>
+      <div id="replyNeededBadge" style="display:none;">
+        <span class="badge badge-yellow" id="replyNeededCount"></span>
+      </div>
+    </div>
+
+    <div class="inbox-layout" id="inboxLayout">
+      <!-- LEFT: client list -->
+      <div class="inbox-list" id="inboxList">
+        <div class="empty-state" style="padding:40px 20px;">
+          <div class="empty-state-icon">💬</div>
+          <p>Loading conversations…</p>
+        </div>
+      </div>
+
+      <!-- RIGHT: thread panel -->
+      <div class="inbox-thread-panel">
+        <div class="inbox-select-prompt" id="inboxSelectPrompt">
+          <div class="empty-state-icon" style="font-size:2.5rem;opacity:0.2;">💬</div>
+          <h3 style="color:var(--off-white);margin-bottom:6px;">Select a conversation</h3>
+          <p style="font-size:0.8rem;">Pick a client from the left to read and reply.</p>
+        </div>
+
+        <div id="inboxThread" style="display:none;flex:1;display:none;flex-direction:column;min-height:0;">
+          <div class="inbox-thread-header" id="threadHeader"></div>
+          <div class="message-thread" id="messageThread" style="flex:1;max-height:none;padding:16px 20px;"></div>
+          <div class="inbox-reply-bar">
+            <textarea id="replyInput" placeholder="Reply as ON-Q25… (Enter to send, Shift+Enter for new line)" rows="2"
+              onkeydown="handleReplyKey(event)"></textarea>
+            <button class="btn btn-primary" onclick="sendReply()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+let activeClientId = null;
+let realtimeChannel = null;
+let clientsData = [];
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+async function loadInbox() {
+  const { data: clients } = await supabase
+    .from('profiles').select('*').eq('is_admin', false).order('created_at', { ascending: false });
+
+  if (!clients?.length) {
+    document.getElementById('inboxList').innerHTML = `
+      <div class="empty-state" style="padding:40px 20px;">
+        <div class="empty-state-icon">👥</div>
+        <h3>No clients yet</h3>
+        <p>Invite clients from <a href="admin.html" style="color:var(--blue-lt)">All Clients</a>.</p>
+      </div>`;
+    return;
+  }
+
+  // Fetch latest message per client
+  const rows = await Promise.all(clients.map(async c => {
+    const { data: msgs } = await supabase
+      .from('messages').select('content,is_from_admin,created_at')
+      .eq('client_id', c.id).order('created_at', { ascending: false }).limit(1);
+    const lastMsg = msgs?.[0] || null;
+    return { client: c, lastMsg };
+  }));
+
+  // Sort by latest message time (most recent first), clients with no messages last
+  rows.sort((a, b) => {
+    if (!a.lastMsg && !b.lastMsg) return 0;
+    if (!a.lastMsg) return 1;
+    if (!b.lastMsg) return -1;
+    return new Date(b.lastMsg.created_at) - new Date(a.lastMsg.created_at);
+  });
+
+  const needsReply = rows.filter(r => r.lastMsg && !r.lastMsg.is_from_admin).length;
+  const badge = document.getElementById('replyNeededBadge');
+  const count = document.getElementById('replyNeededCount');
+  if (needsReply > 0) {
+    count.textContent = `${needsReply} need${needsReply === 1 ? 's' : ''} reply`;
+    badge.style.display = 'block';
+  }
+
+  clientsData = rows;
+
+  document.getElementById('inboxList').innerHTML = rows.map(({ client: c, lastMsg }) => {
+    const initials = (c.full_name || '?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const needsReply = lastMsg && !lastMsg.is_from_admin;
+    const preview = lastMsg
+      ? (lastMsg.content.length > 55 ? lastMsg.content.slice(0, 55) + '…' : lastMsg.content)
+      : 'No messages yet';
+    const timeAgo = lastMsg ? formatDate(lastMsg.created_at) : '';
+    return `
+      <div class="inbox-client-row" id="row-${c.id}" onclick="selectClient('${c.id}')">
+        <div class="inbox-avatar">${initials}</div>
+        <div class="inbox-client-info">
+          <div class="inbox-client-top">
+            <span class="inbox-client-name">${c.full_name || 'Unnamed Client'}</span>
+            <span class="inbox-time">${timeAgo}</span>
+          </div>
+          ${c.business_name ? `<div class="inbox-client-biz">${c.business_name}</div>` : ''}
+          <div class="inbox-preview">${escHtml(preview)}</div>
+        </div>
+        ${needsReply ? `<div class="inbox-dot"></div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+async function selectClient(clientId) {
+  activeClientId = clientId;
+
+  // Highlight active row
+  document.querySelectorAll('.inbox-client-row').forEach(r => r.classList.remove('active'));
+  const row = document.getElementById(`row-${clientId}`);
+  if (row) row.classList.add('active');
+
+  // Show thread panel
+  document.getElementById('inboxSelectPrompt').style.display = 'none';
+  const thread = document.getElementById('inboxThread');
+  thread.style.display = 'flex';
+
+  // Find client data
+  const found = clientsData.find(r => r.client.id === clientId);
+  const client = found?.client;
+  if (client) {
+    const initials = (client.full_name || '?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('threadHeader').innerHTML = `
+      <div class="thread-avatar">${initials}</div>
+      <div>
+        <div class="thread-name">${client.full_name || 'Unnamed Client'}</div>
+        ${client.business_name ? `<div class="thread-biz">${client.business_name}</div>` : ''}
+      </div>
+      <a href="admin-client.html?id=${clientId}" class="btn btn-outline btn-sm" style="margin-left:auto;">
+        Full Profile →
+      </a>`;
+  }
+
+  // Subscribe to new messages
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+  realtimeChannel = supabase.channel(`inbox-${clientId}`)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `client_id=eq.${clientId}` },
+      () => { renderMessages(clientId); loadInbox(); })
+    .subscribe();
+
+  await renderMessages(clientId);
+  document.getElementById('replyInput').focus();
+}
+
+async function renderMessages(clientId) {
+  const { data } = await supabase
+    .from('messages').select('*').eq('client_id', clientId).order('created_at');
+  const thread = document.getElementById('messageThread');
+  if (!data?.length) {
+    thread.innerHTML = `<div class="empty-state" style="padding:40px;"><div class="empty-state-icon">💬</div><p>No messages yet. Start the conversation.</p></div>`;
+    return;
+  }
+  thread.innerHTML = data.map(m => `
+    <div class="message-bubble ${m.is_from_admin ? 'from-client' : 'from-admin'}">
+      <div class="bubble-content">${escHtml(m.content)}</div>
+      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${formatDate(m.created_at)} ${formatTime(m.created_at)}</div>
+    </div>`).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+async function sendReply() {
+  if (!activeClientId) return;
+  const input = document.getElementById('replyInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  const { data: { session } } = await supabase.auth.getSession();
+  const { error } = await supabase.from('messages').insert({
+    client_id: activeClientId, content, author_id: session.user.id, is_from_admin: true
+  });
+  if (error) { showToast(error.message, 'error'); return; }
+  renderMessages(activeClientId);
+  loadInbox();
+}
+
+function handleReplyKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+}
+
+(async () => {
+  const session = await requireAuth(); if (!session) return;
+  const profile = await getProfile(session.user.id);
+  if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
+  setNavUser(profile, session);
+  loadInbox();
+})();
+</script>
+
+<style>
+.portal-main { height: 100vh; overflow: hidden; }
+
+.inbox-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 148px);
+}
+
+/* Left list */
+.inbox-list {
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface3) transparent;
+}
+.inbox-client-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background var(--ease);
+  position: relative;
+}
+.inbox-client-row:hover  { background: var(--surface2); }
+.inbox-client-row.active { background: rgba(59,110,245,0.08); }
+.inbox-avatar {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700;
+}
+.inbox-client-info { flex: 1; min-width: 0; }
+.inbox-client-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; margin-bottom: 1px; }
+.inbox-client-name { font-size: 0.85rem; font-weight: 600; color: var(--white); }
+.inbox-client-biz  { font-size: 0.72rem; color: var(--gray); margin-bottom: 2px; }
+.inbox-time  { font-size: 0.68rem; color: var(--gray); white-space: nowrap; flex-shrink: 0; }
+.inbox-preview { font-size: 0.78rem; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.inbox-dot {
+  flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--yellow); margin-top: 4px; align-self: flex-start;
+}
+
+/* Right thread panel */
+.inbox-thread-panel {
+  background: var(--surface);
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
+.inbox-select-prompt {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 40px;
+}
+
+/* Thread header */
+.inbox-thread-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.thread-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+}
+.thread-name { font-size: 0.9rem; font-weight: 700; color: var(--white); }
+.thread-biz  { font-size: 0.75rem; color: var(--gray); margin-top: 1px; }
+
+/* Thread messages */
+#messageThread {
+  flex: 1; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--surface3) transparent;
+  padding: 16px 20px !important;
+  max-height: none !important;
+}
+
+/* Reply bar */
+.inbox-reply-bar {
+  display: flex; gap: 10px; align-items: flex-end;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.inbox-reply-bar textarea {
+  flex: 1;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--r); color: var(--white);
+  padding: 10px 14px; font-size: 0.875rem; resize: none;
+  line-height: 1.5; font-family: var(--font);
+  transition: border-color var(--ease);
+  min-height: 46px; max-height: 120px;
+}
+.inbox-reply-bar textarea:focus { border-color: var(--blue); outline: none; }
+.inbox-reply-bar textarea::placeholder { color: rgba(255,255,255,0.2); }
+</style>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — ON-Q25 Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="portal2.css" />
+</head>
+<body>
+<div class="portal-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">ON-<span>Q</span>25</div>
+      <div class="sidebar-logo-tag">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="admin.html" class="active">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        All Clients
+      </a>
+      <a href="admin-inbox.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Inbox
+        <span class="nav-badge" id="inboxBadgeNav" style="display:none;"></span>
+      </a>
+      <a href="admin-team.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        Team
+      </a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="/index.html" class="sidebar-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to ON-Q25.com
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="navInitial">?</div>
+        <span class="sidebar-user-name" id="navName">Loading…</span>
+        <button class="sidebar-signout" onclick="signOut()" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;">
+      <div>
+        <h1>All Clients</h1>
+        <p>Manage your clients, their projects, files, and messages.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openInviteModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Invite Client
+      </button>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-card">
+        <div class="stat-card-label">Total Clients</div>
+        <div class="stat-card-value" id="statClients">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Active Projects</div>
+        <div class="stat-card-value" id="statProjects">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Needs Reply</div>
+        <div class="stat-card-value" id="statMessages">—</div>
+      </div>
+    </div>
+
+    <!-- CLIENT LIST -->
+    <div id="clientGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+    <div id="emptyClients" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">👥</div>
+      <h3>No clients yet</h3>
+      <p>Invite your first client using the button above.</p>
+    </div>
+  </main>
+</div>
+
+<!-- EDIT CLIENT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h2>Edit Client</h2>
+    <input type="hidden" id="editClientId" />
+    <div class="form-group">
+      <label>Full Name</label>
+      <input class="form-input" id="editName" placeholder="e.g. Jane Smith" />
+    </div>
+    <div class="form-group">
+      <label>Business Name</label>
+      <input class="form-input" id="editBusiness" placeholder="e.g. Smith Barbershop" />
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="document.getElementById('editModal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" onclick="updateClient()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div class="modal-overlay" id="inviteModal">
+  <div class="modal-box">
+    <h2>Invite a Client</h2>
+    <p style="font-size:0.8rem;color:var(--gray);margin-bottom:20px;">Enter their email and we'll create their account. Share the portal link with them along with a temporary password.</p>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input class="form-input" id="inviteName" placeholder="e.g. Jane Smith" />
+    </div>
+    <div class="form-group">
+      <label>Business Name</label>
+      <input class="form-input" id="inviteBusiness" placeholder="e.g. Smith Barbershop" />
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input class="form-input" type="email" id="inviteEmail" placeholder="client@email.com" />
+    </div>
+    <div class="form-group">
+      <label>Temporary Password</label>
+      <input class="form-input" type="text" id="invitePassword" placeholder="They can change this later" value="OnQ25Client!" />
+    </div>
+    <div id="inviteErr" style="color:#f87171;font-size:0.8rem;margin-bottom:12px;display:none;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="closeInviteModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="inviteClient()" id="inviteBtn">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+function openInviteModal()  { document.getElementById('inviteModal').classList.add('open'); }
+function closeInviteModal() { document.getElementById('inviteModal').classList.remove('open'); }
+
+function escAttr(s) { return (s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
+
+async function loadClients() {
+  const { data: clients, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('is_admin', false)
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error(error); return; }
+
+  document.getElementById('statClients').textContent = clients?.length ?? 0;
+
+  if (!clients?.length) {
+    document.getElementById('emptyClients').style.display = 'block';
+    document.getElementById('clientGrid').innerHTML = '';
+    document.getElementById('statProjects').textContent = '0';
+    document.getElementById('statMessages').textContent = '0';
+    return;
+  }
+  document.getElementById('emptyClients').style.display = 'none';
+
+  let totalProjects = 0;
+  let needsReply = 0;
+
+  const cards = await Promise.all(clients.map(async (c) => {
+    const [filesRes, projsRes, msgsRes, schedRes, lastMsgRes] = await Promise.all([
+      supabase.from('files').select('id', { count: 'exact', head: true }).eq('client_id', c.id),
+      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('client_id', c.id).neq('status','complete'),
+      supabase.from('messages').select('id', { count: 'exact', head: true }).eq('client_id', c.id),
+      supabase.from('schedule_items').select('id', { count: 'exact', head: true }).eq('client_id', c.id).eq('status','upcoming'),
+      supabase.from('messages').select('is_from_admin').eq('client_id', c.id).order('created_at', {ascending:false}).limit(1),
+    ]);
+    totalProjects += projsRes.count ?? 0;
+    const lastMsg = lastMsgRes.data?.[0];
+    const clientNeedsReply = lastMsg && !lastMsg.is_from_admin;
+    if (clientNeedsReply) needsReply++;
+
+    const initials = (c.full_name || '?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    return `
+      <div class="client-card" onclick="location.href='admin-client.html?id=${c.id}'">
+        <div class="client-card-header">
+          <div class="client-avatar">${initials}</div>
+          <div class="client-info">
+            <div class="client-name">${c.full_name || 'Unnamed Client'}</div>
+            <div class="client-biz">${c.business_name || ''}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+            <span class="badge badge-green">Active</span>
+            ${clientNeedsReply ? `<span class="badge badge-yellow">Reply Needed</span>` : ''}
+          </div>
+        </div>
+        <div class="client-stats">
+          <div class="client-stat"><span>${filesRes.count??0}</span> Files</div>
+          <div class="client-stat"><span>${projsRes.count??0}</span> Projects</div>
+          <div class="client-stat"><span>${msgsRes.count??0}</span> Messages</div>
+          <div class="client-stat"><span>${schedRes.count??0}</span> Upcoming</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;" onclick="event.stopPropagation()">
+          <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;"
+            onclick="openEditModal('${c.id}','${escAttr(c.full_name)}','${escAttr(c.business_name)}')">
+            Edit
+          </button>
+          <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center;"
+            onclick="location.href='admin-client.html?id=${c.id}'">
+            Manage →
+          </button>
+          <button class="btn btn-danger btn-sm"
+            onclick="deleteClient('${c.id}','${escAttr(c.full_name||'this client')}')">
+            Delete
+          </button>
+        </div>
+      </div>`;
+  }));
+
+  document.getElementById('statProjects').textContent = totalProjects;
+  document.getElementById('statMessages').textContent = needsReply;
+  // Update inbox badge in sidebar
+  const navBadge = document.getElementById('inboxBadgeNav');
+  if (navBadge) { navBadge.textContent = needsReply; navBadge.style.display = needsReply > 0 ? 'inline-flex' : 'none'; }
+  document.getElementById('clientGrid').innerHTML = cards.join('');
+}
+
+function openEditModal(id, name, biz) {
+  document.getElementById('editClientId').value = id;
+  document.getElementById('editName').value = name;
+  document.getElementById('editBusiness').value = biz;
+  document.getElementById('editModal').classList.add('open');
+}
+
+async function updateClient() {
+  const id  = document.getElementById('editClientId').value;
+  const name = document.getElementById('editName').value.trim();
+  const biz  = document.getElementById('editBusiness').value.trim();
+  if (!name) return;
+  const btn = document.querySelector('#editModal .btn-primary');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  await supabase.from('profiles').update({ full_name: name, business_name: biz || null }).eq('id', id);
+  document.getElementById('editModal').classList.remove('open');
+  btn.disabled = false; btn.textContent = 'Save Changes';
+  showToast('Client updated');
+  loadClients();
+}
+
+async function deleteClient(id, name) {
+  if (!confirm(`Remove ${name} and all their data? This cannot be undone.`)) return;
+  await Promise.all([
+    supabase.from('messages').delete().eq('client_id', id),
+    supabase.from('projects').delete().eq('client_id', id),
+    supabase.from('schedule_items').delete().eq('client_id', id),
+    supabase.from('files').delete().eq('client_id', id),
+  ]);
+  await supabase.from('profiles').delete().eq('id', id);
+  showToast(`${name} removed`);
+  loadClients();
+}
+
+async function inviteClient() {
+  const name     = document.getElementById('inviteName').value.trim();
+  const biz      = document.getElementById('inviteBusiness').value.trim();
+  const email    = document.getElementById('inviteEmail').value.trim();
+  const password = document.getElementById('invitePassword').value.trim();
+  const err      = document.getElementById('inviteErr');
+  const btn      = document.getElementById('inviteBtn');
+  err.style.display = 'none';
+  if (!name || !email || !password) { err.textContent = 'Name, email and password are required.'; err.style.display='block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  // Use admin signUp (this only works if email confirmations are disabled)
+  const { data, error } = await supabase.auth.signUp({
+    email, password,
+    options: { data: { full_name: name } }
+  });
+
+  if (error) {
+    err.textContent = error.message; err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Create Account';
+    return;
+  }
+
+  // Update profile with business name
+  if (data.user) {
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      full_name: name,
+      business_name: biz || null,
+      is_admin: false
+    });
+  }
+
+  closeInviteModal();
+  document.getElementById('inviteName').value = '';
+  document.getElementById('inviteBusiness').value = '';
+  document.getElementById('inviteEmail').value = '';
+  btn.disabled = false; btn.textContent = 'Create Account';
+  showToast(`Account created for ${name}`);
+  loadClients();
+}
+
+document.getElementById('inviteModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeInviteModal();
+});
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
+});
+
+(async () => {
+  const session = await requireAuth();
+  if (!session) return;
+  const profile = await getProfile(session.user.id);
+  if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
+  setNavUser(profile, session);
+  loadClients();
+})();
+</script>
+
+<style>
+.client-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: border-color 0.18s, transform 0.18s;
+}
+.client-card:hover { border-color: var(--border-md); transform: translateY(-2px); }
+.client-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.client-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue), var(--blue-lt));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+}
+.client-info { flex: 1; min-width: 0; }
+.client-name { font-weight: 700; font-size: 0.925rem; color: var(--white); }
+.client-biz  { font-size: 0.75rem; color: var(--gray); margin-top: 1px; }
+.client-stats {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 8px; margin-bottom: 14px;
+  padding: 12px; background: var(--surface2); border-radius: 10px;
+}
+.client-stat { text-align: center; }
+.client-stat span { display: block; font-size: 1.1rem; font-weight: 800; color: var(--white); }
+.client-stat { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; }
+.nav-badge {
+  margin-left: auto; background: var(--blue);
+  color: var(--white); font-size: 0.6rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 100px; min-width: 18px;
+  text-align: center; display: inline-flex; align-items: center; justify-content: center;
+}
+</style>
+</body>
+</html>

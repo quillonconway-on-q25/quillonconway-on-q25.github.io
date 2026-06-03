@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages — ON-Q25 Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="portal2.css" />
+</head>
+<body>
+<div class="portal-layout">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">ON-<span>Q</span>25</div>
+      <div class="sidebar-logo-tag">Portal</div>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a href="files.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Files</a>
+      <a href="schedule.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Schedule</a>
+      <a href="messages.html" class="active"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Messages</a>
+      <a href="projects.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Projects</a>
+    </nav>
+    <div class="sidebar-back">
+      <a href="/index.html" class="sidebar-back-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to ON-Q25.com
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="navInitial">?</div>
+        <span class="sidebar-user-name" id="navName">Loading…</span>
+        <button class="sidebar-signout" onclick="signOut()" title="Sign out"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="portal-main">
+    <div class="page-header">
+      <h1>Messages</h1>
+      <p>Communicate directly with the ON-Q25 team.</p>
+    </div>
+
+    <div class="card" style="max-width:760px;">
+      <div class="message-thread" id="messageThread">
+        <div class="empty-state" style="padding:32px;">
+          <div class="empty-state-icon">💬</div>
+          <h3>No messages yet</h3>
+          <p>Send a message to the ON-Q25 team below.</p>
+        </div>
+      </div>
+
+      <div class="message-input-row">
+        <textarea id="msgInput" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+let currentUid = null;
+
+async function loadMessages() {
+  const { data } = await supabase.from('messages').select('*').eq('client_id', currentUid).order('created_at');
+  const thread = document.getElementById('messageThread');
+  if (!data?.length) {
+    thread.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💬</div><h3>No messages yet</h3><p>Send a message to the ON-Q25 team below.</p></div>`;
+    return;
+  }
+  thread.innerHTML = data.map(m => `
+    <div class="message-bubble ${m.is_from_admin ? 'from-admin' : 'from-client'}">
+      <div class="bubble-content">${escHtml(m.content)}</div>
+      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${formatDate(m.created_at)} ${formatTime(m.created_at)}</div>
+    </div>`).join('');
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+async function sendMessage() {
+  const input   = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  const { error } = await supabase.from('messages').insert({
+    client_id: currentUid, content, author_id: currentUid, is_from_admin: false
+  });
+  if (!error) loadMessages();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+// Real-time subscription
+function subscribeMessages() {
+  supabase.channel('messages-channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `client_id=eq.${currentUid}` },
+      () => loadMessages())
+    .subscribe();
+}
+
+(async () => {
+  const session = await requireAuth(); if (!session) return;
+  currentUid = session.user.id;
+  const profile = await getProfile(currentUid);
+  setNavUser(profile, session);
+  await loadMessages();
+  subscribeMessages();
+})();
+</script>
+</body>
+</html>

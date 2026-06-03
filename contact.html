@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us — ON-Q25</title>
+  <meta name="description" content="Get in touch with ON-Q25. We're ready to help your business grow." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="contact.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <ul class="nav-links-left">
+        <li><a href="about.html">About</a></li>
+        <li><a href="approach.html">Approach</a></li>
+        <li><a href="contact.html" class="active">Contact</a></li>
+        <li><a href="/portal/login.html" class="nav-portal-btn">Client Portal</a></li>
+      </ul>
+      <a href="index.html" class="nav-logo">ON-<span>Q</span>25</a>
+      <div class="nav-right">
+        <div class="nav-socials">
+        <a href="https://www.instagram.com/onq25/" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="https://www.facebook.com/onq25" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="https://x.com/onq25" target="_blank" rel="noopener" aria-label="X">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </a>
+      </div>
+              <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="about.html">About</a>
+    <a href="approach.html">Approach</a>
+    <a href="contact.html">Contact</a>
+  </div>
+
+  <!-- CONTACT -->
+  <section class="contact-section">
+    <div class="container">
+      <h1 class="contact-heading reveal">Contact Us</h1>
+      <div class="contact-form-wrap reveal">
+        <form class="contact-form" onsubmit="handleSubmit(event)">
+          <div class="form-group">
+            <label for="firstName">First name *</label>
+            <input type="text" id="firstName" name="firstName" required />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last name *</label>
+            <input type="text" id="lastName" name="lastName" required />
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Email *</label>
+            <input type="email" id="contactEmail" name="email" required />
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5"></textarea>
+          </div>
+          <button type="submit" class="contact-submit">Submit</button>
+        </form>
+        <div class="form-success" id="formSuccess">
+          <p>Thanks for reaching out! We'll be in touch soon.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <div class="footer-logo">ON-<span>Q</span>25</div>
+        <ul class="footer-nav">
+          <li><a href="about.html">ABOUT</a></li>
+          <li><a href="approach.html">SOLUTIONS</a></li>
+          <li><a href="approach.html">INSIGHTS</a></li>
+          <li><a href="contact.html">CONTACT</a></li>
+        </ul>
+        <div class="footer-socials">
+          <a href="https://www.instagram.com/onq25/" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="https://www.facebook.com/onq25" target="_blank" rel="noopener" aria-label="Facebook">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://x.com/onq25" target="_blank" rel="noopener" aria-label="X">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-right">
+        <h3>Stay Updated with the Latest</h3>
+        <form class="newsletter-form" onsubmit="return false;">
+          <div class="newsletter-field">
+            <label for="nlEmail">Email *</label>
+            <input type="email" id="nlEmail" name="email" required />
+          </div>
+          <label class="newsletter-check">
+            <input type="checkbox" name="subscribe" />
+            <span>Yes, subscribe me to your newsletter.</span>
+          </label>
+          <button type="submit" class="newsletter-btn">Submit</button>
+        </form>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Accessibility Statement</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const name = form.firstName.value;
+      const last = form.lastName.value;
+      const email = form.email.value;
+      const message = form.message.value;
+      window.location.href = `mailto:daquanconway@on-q25.com?subject=Contact from ${encodeURIComponent(name + ' ' + last)}&body=${encodeURIComponent(message + '\n\nFrom: ' + email)}`;
+      document.getElementById('formSuccess').style.display = 'block';
+      form.style.display = 'none';
+    }
+  </script>
+</body>
+</html>
