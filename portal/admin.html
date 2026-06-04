@@ -387,7 +387,7 @@ function openInviteEmailModal(name, email, password, biz, isReInvite = false) {
 
   let body;
   if (isReInvite) {
-    body = 'Hi ' + firstName + ',\n\nYour ON-Q25 Client Portal access has been restored! We\'ve sent a password reset link to this email address — click it to set a new password and log back in.\n\nPortal Link: https://on-q25.com/portal/login\nEmail: ' + email + bizLine + '\n\nCheck your inbox (and spam folder) for the password reset email from ON-Q25.' + footer;
+    body = 'Hi ' + firstName + ',\n\nYour ON-Q25 Client Portal access has been restored! We\'ve sent a password reset link to your email — use it to set a new password and log back in.\n\nPortal Link: https://on-q25.com/portal/login\nEmail: ' + email + bizLine + '\n\n⚠️ IMPORTANT: The password reset email will come from Supabase (no-reply@mail.app.supabase.io) — NOT from ON-Q25. Please check your inbox and spam folder for an email from that address and click the reset link inside.' + footer;
   } else {
     body = 'Hi ' + firstName + ',\n\nYour ON-Q25 Client Portal account has been created and is ready to access. Here are your login details:\n\nPortal Link: https://on-q25.com/portal/login\nEmail: ' + email + '\nTemporary Password: ' + password + bizLine + '\n\nPlease log in and change your password after your first sign-in.\n\nThrough your portal you can:\n• View and track your projects in real time\n• Upload and access files\n• Message the ON-Q25 team directly\n• Check your upcoming schedule' + footer;
   }
