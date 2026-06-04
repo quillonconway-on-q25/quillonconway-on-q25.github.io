@@ -15,6 +15,20 @@ async function getProfile(userId) {
     .select('*')
     .eq('id', userId)
     .single();
+
+  // If profile was deleted but auth account still exists, auto-restore it
+  if (!data) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const restored = {
+        id: userId,
+        full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Client',
+        is_admin: false
+      };
+      await supabase.from('profiles').upsert(restored);
+      return restored;
+    }
+  }
   return data;
 }
 

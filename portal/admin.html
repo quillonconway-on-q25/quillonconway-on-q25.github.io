@@ -328,8 +328,18 @@ async function inviteClient() {
   });
 
   if (error) {
-    err.textContent = error.message; err.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'Create Account';
+    // Existing account — offer to re-invite them
+    const isExisting = error.message.toLowerCase().includes('already') ||
+                       error.message.toLowerCase().includes('registered') ||
+                       error.message.toLowerCase().includes('taken');
+    if (isExisting) {
+      btn.disabled = false; btn.textContent = 'Create Account';
+      err.innerHTML = `This email already has an account. <button onclick="reInviteClient('${email.replace(/'/g,"\\'")}','${name.replace(/'/g,"\\'")}','${(biz||'').replace(/'/g,"\\'")}'); return false;" style="background:none;border:none;color:var(--blue-lt);cursor:pointer;font-size:inherit;font-family:inherit;text-decoration:underline;padding:0;">Re-invite them →</button>`;
+      err.style.display = 'block';
+    } else {
+      err.textContent = error.message; err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Create Account';
+    }
     return;
   }
 
@@ -353,40 +363,34 @@ async function inviteClient() {
   loadClients();
 }
 
+async function reInviteClient(email, name, biz) {
+  // Send a password reset so they can get back in
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://on-q25.com/portal/login'
+  });
+  closeInviteModal();
+  if (error) { showToast('Could not send reset email: ' + error.message, 'error'); return; }
+  showToast(`Reset link sent to ${email}`);
+  // Open the invite email modal so admin can also send login instructions
+  openInviteEmailModal(name, email, '[They will receive a password reset link — see note below]', biz, true);
+}
+
 document.getElementById('inviteModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeInviteModal();
 });
 
-function openInviteEmailModal(name, email, password, biz) {
+function openInviteEmailModal(name, email, password, biz, isReInvite = false) {
   const firstName = name.split(' ')[0];
-  const bizLine = biz ? `\nBusiness: ${biz}` : '';
+  const bizLine = biz ? '\nBusiness: ' + biz : '';
+  const subject = 'Welcome to the ON-Q25 Client Portal — Your Account is Ready';
+  const footer = '\n\nIf you have any questions, reply to this email or reach out through the portal.\n\nLooking forward to working with you,\n\nON-Q25 Team\ndaquanconway@on-q25.com\nhttps://on-q25.com';
 
-  const subject = `Welcome to the ON-Q25 Client Portal — Your Account is Ready`;
-
-  const body = `Hi ${firstName},
-
-Your ON-Q25 Client Portal account has been created and is ready to access. Here are your login details:
-
-Portal Link: https://on-q25.com/portal/login
-Email: ${email}
-Temporary Password: ${password}
-${bizLine}
-
-Please log in and change your password after your first sign-in.
-
-Through your portal you can:
-• View and track your projects in real time
-• Upload and access files
-• Message the ON-Q25 team directly
-• Check your upcoming schedule
-
-If you have any questions, reply to this email or reach out through the portal.
-
-Looking forward to working with you,
-
-ON-Q25 Team
-daquanconway@on-q25.com
-https://on-q25.com`;
+  let body;
+  if (isReInvite) {
+    body = 'Hi ' + firstName + ',\n\nYour ON-Q25 Client Portal access has been restored! We\'ve sent a password reset link to this email address — click it to set a new password and log back in.\n\nPortal Link: https://on-q25.com/portal/login\nEmail: ' + email + bizLine + '\n\nCheck your inbox (and spam folder) for the password reset email from ON-Q25.' + footer;
+  } else {
+    body = 'Hi ' + firstName + ',\n\nYour ON-Q25 Client Portal account has been created and is ready to access. Here are your login details:\n\nPortal Link: https://on-q25.com/portal/login\nEmail: ' + email + '\nTemporary Password: ' + password + bizLine + '\n\nPlease log in and change your password after your first sign-in.\n\nThrough your portal you can:\n• View and track your projects in real time\n• Upload and access files\n• Message the ON-Q25 team directly\n• Check your upcoming schedule' + footer;
+  }
 
   const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
