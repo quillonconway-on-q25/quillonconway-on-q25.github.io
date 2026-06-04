@@ -142,6 +142,34 @@
   </div>
 </div>
 
+<!-- INVITE EMAIL MODAL -->
+<div class="modal-overlay" id="inviteEmailModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <div style="width:36px;height:36px;border-radius:50%;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div>
+        <h2 style="font-size:0.95rem;margin-bottom:1px;">Account Created!</h2>
+        <p style="font-size:0.78rem;color:var(--gray);margin:0;">Now send <span id="inviteEmailName"></span> their login details.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:16px 0;">
+      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray);margin-bottom:8px;">Email preview → <span id="inviteEmailAddr" style="color:var(--blue-lt);text-transform:none;letter-spacing:0;font-weight:500;"></span></div>
+      <pre id="inviteEmailPreview" style="font-size:0.75rem;color:var(--gray-lt);white-space:pre-wrap;font-family:var(--font);line-height:1.6;max-height:240px;overflow-y:auto;margin:0;"></pre>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-outline" onclick="document.getElementById('inviteEmailModal').classList.remove('open')">Skip</button>
+      <button class="btn btn-primary" id="inviteEmailBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Open Gmail to Send
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 
@@ -321,11 +349,56 @@ async function inviteClient() {
   document.getElementById('inviteEmail').value = '';
   btn.disabled = false; btn.textContent = 'Create Account';
   showToast(`Account created for ${name}`);
+  openInviteEmailModal(name, email, password, biz);
   loadClients();
 }
 
 document.getElementById('inviteModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeInviteModal();
+});
+
+function openInviteEmailModal(name, email, password, biz) {
+  const firstName = name.split(' ')[0];
+  const bizLine = biz ? `\nBusiness: ${biz}` : '';
+
+  const subject = `Welcome to the ON-Q25 Client Portal — Your Account is Ready`;
+
+  const body = `Hi ${firstName},
+
+Your ON-Q25 Client Portal account has been created and is ready to access. Here are your login details:
+
+Portal Link: https://on-q25.com/portal/login
+Email: ${email}
+Temporary Password: ${password}
+${bizLine}
+
+Please log in and change your password after your first sign-in.
+
+Through your portal you can:
+• View and track your projects in real time
+• Upload and access files
+• Message the ON-Q25 team directly
+• Check your upcoming schedule
+
+If you have any questions, reply to this email or reach out through the portal.
+
+Looking forward to working with you,
+
+ON-Q25 Team
+daquanconway@on-q25.com
+https://on-q25.com`;
+
+  const gmailUrl = `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  document.getElementById('inviteEmailPreview').textContent = body;
+  document.getElementById('inviteEmailBtn').onclick = () => window.open(gmailUrl, '_blank');
+  document.getElementById('inviteEmailName').textContent = name;
+  document.getElementById('inviteEmailAddr').textContent = email;
+  document.getElementById('inviteEmailModal').classList.add('open');
+}
+
+document.getElementById('inviteEmailModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
 document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
