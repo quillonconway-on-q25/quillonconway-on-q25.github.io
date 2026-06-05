@@ -59,13 +59,20 @@ CREATE TABLE IF NOT EXISTS schedule_items (
 
 -- 4. MESSAGES
 CREATE TABLE IF NOT EXISTS messages (
-  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  client_id    uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  content      text NOT NULL,
-  author_id    uuid REFERENCES auth.users(id),
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  content       text NOT NULL,
+  author_id     uuid REFERENCES auth.users(id),
   is_from_admin boolean DEFAULT false,
-  created_at   timestamptz DEFAULT now()
+  is_read       boolean NOT NULL DEFAULT false,
+  created_at    timestamptz DEFAULT now()
 );
+
+-- ── Migration: add is_read to existing messages table ──────────────────────────
+-- Run this if the table already exists:
+--   ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read boolean NOT NULL DEFAULT false;
+--   UPDATE messages SET is_read = true WHERE created_at < now(); -- mark old messages read
+-- ────────────────────────────────────────────────────────────────────────────────
 
 -- 5. PROJECTS
 CREATE TABLE IF NOT EXISTS projects (

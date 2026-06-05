@@ -260,6 +260,11 @@ async function sendReply() {
   if (error) { showToast(error.message, 'error'); return; }
   renderMessages(activeClientId);
   loadInbox();
+
+  // Fire email notification (non-blocking — don't await)
+  supabase.functions.invoke('notify-message', {
+    body: { client_id: activeClientId, message: content }
+  }).catch(err => console.warn('Email notify failed:', err));
 }
 
 function handleReplyKey(e) {

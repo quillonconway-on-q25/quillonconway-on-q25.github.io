@@ -66,6 +66,29 @@ function cleanName(raw) {
   return raw;
 }
 
+// Show unread message count badge on the Messages nav link
+async function loadUnreadBadge(uid) {
+  const { count } = await supabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('client_id', uid)
+    .eq('is_from_admin', true)
+    .eq('is_read', false);
+
+  const badge       = document.getElementById('msgBadge');
+  const mobileBadge = document.getElementById('msgBadgeMobile');
+  const show = count > 0;
+
+  if (badge) {
+    badge.textContent  = count;
+    badge.style.display = show ? 'inline-block' : 'none';
+  }
+  if (mobileBadge) {
+    mobileBadge.textContent  = count;
+    mobileBadge.style.display = show ? 'inline-block' : 'none';
+  }
+}
+
 // Populate nav user info once profile loads
 function setNavUser(profile, session) {
   const nameEl = document.getElementById('navName');

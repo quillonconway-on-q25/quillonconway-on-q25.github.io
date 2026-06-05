@@ -127,6 +127,30 @@ input, textarea, select { font-family: var(--font); font-size: 0.875rem; outline
 }
 .sidebar-nav a svg { flex-shrink: 0; opacity: 0.75; }
 .sidebar-nav a.active svg { opacity: 1; }
+.nav-unread {
+  margin-left: auto;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.4;
+}
+.pmn-unread {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.58rem;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 1px 5px;
+  line-height: 1.4;
+}
 .sidebar-bottom {
   padding: 12px 10px;
   border-top: 1px solid var(--border);
