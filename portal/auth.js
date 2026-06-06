@@ -66,6 +66,30 @@ function cleanName(raw) {
   return raw;
 }
 
+// Show count of client conversations waiting for an admin reply
+async function loadAdminInboxBadge() {
+  // Fetch latest message per client — count those from clients (not admin)
+  const { data } = await supabase
+    .from('messages')
+    .select('client_id, is_from_admin, created_at')
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  if (!data) return;
+
+  const latest = {};
+  for (const msg of data) {
+    if (!latest[msg.client_id]) latest[msg.client_id] = msg;
+  }
+  const count = Object.values(latest).filter(m => !m.is_from_admin).length;
+
+  const badge = document.getElementById('inboxBadgeNav');
+  if (badge) {
+    badge.textContent    = count;
+    badge.style.display  = count > 0 ? 'inline-flex' : 'none';
+  }
+}
+
 // Show unread message count badge on the Messages nav link
 async function loadUnreadBadge(uid) {
   const { count } = await supabase

@@ -160,8 +160,12 @@
       <pre id="inviteEmailPreview" style="font-size:0.75rem;color:var(--gray-lt);white-space:pre-wrap;font-family:var(--font);line-height:1.6;max-height:240px;overflow-y:auto;margin:0;"></pre>
     </div>
 
-    <div style="display:flex;gap:10px;justify-content:flex-end;">
+    <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
       <button class="btn btn-outline" onclick="document.getElementById('inviteEmailModal').classList.remove('open')">Skip</button>
+      <button class="btn btn-outline" id="copyCredsBtn" onclick="copyLoginInfo()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy Login Info
+      </button>
       <button class="btn btn-primary" id="inviteEmailBtn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Open Gmail to Send
@@ -402,6 +406,15 @@ function openInviteEmailModal(name, email, password, biz, isReInvite = false) {
   document.getElementById('inviteEmailModal').classList.add('open');
 }
 
+function copyLoginInfo() {
+  const text = document.getElementById('inviteEmailPreview').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyCredsBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy Login Info'; }, 2000);
+  });
+}
+
 document.getElementById('inviteEmailModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
 });
@@ -415,6 +428,7 @@ document.getElementById('editModal').addEventListener('click', e => {
   const profile = await getProfile(session.user.id);
   if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
   setNavUser(profile, session);
+  loadAdminInboxBadge();
   loadClients();
 })();
 </script>

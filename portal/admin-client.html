@@ -31,6 +31,7 @@
       <a href="admin-inbox.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Inbox
+        <span class="nav-unread" id="inboxBadgeNav" style="display:none;"></span>
       </a>
       <a href="admin-team.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
@@ -292,6 +293,7 @@ async function loadProjects() {
   }
   const today = new Date(); today.setHours(0,0,0,0);
   el.innerHTML = data.map(p => {
+    const pct       = p.status === 'complete' ? 100 : (p.progress ?? statusProgress[p.status] ?? 0);
     const isOverdue = p.due_date && p.status !== 'complete' && new Date(p.due_date) < today;
     const dueStr    = p.due_date
       ? `<span style="color:${isOverdue ? '#f87171' : 'var(--gray)'};">
@@ -317,12 +319,18 @@ async function loadProjects() {
         </div>
       </div>
       <div>
-        <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--gray);margin-bottom:5px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;color:var(--gray);margin-bottom:5px;">
           <span><span class="badge ${statusBadge[p.status]}">${statusLabel[p.status]}</span></span>
-          <span>${statusProgress[p.status]}%</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" min="0" max="100" value="${pct}"
+              style="width:52px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--white);font-size:0.78rem;padding:2px 6px;text-align:center;"
+              onchange="updateProjectProgress('${p.id}', this.value)"
+              ${p.status === 'complete' ? 'disabled' : ''} />
+            <span>%</span>
+          </div>
         </div>
         <div class="progress-bar-wrap" style="max-width:100%;height:5px;">
-          <div class="progress-bar-fill" style="width:${statusProgress[p.status]}%"></div>
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
         </div>
       </div>
     </div>`;
@@ -343,9 +351,16 @@ async function addProject() {
 }
 
 async function updateProjectStatus(id, status) {
-  await supabase.from('projects').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+  const update = { status, updated_at: new Date().toISOString() };
+  if (status === 'complete') update.progress = 100;
+  await supabase.from('projects').update(update).eq('id', id);
   showToast('Status updated');
   loadProjects();
+}
+
+async function updateProjectProgress(id, value) {
+  const pct = Math.min(100, Math.max(0, parseInt(value) || 0));
+  await supabase.from('projects').update({ progress: pct, updated_at: new Date().toISOString() }).eq('id', id);
 }
 
 async function deleteProject(id) {
@@ -608,6 +623,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   const adminProfile = await getProfile(session.user.id);
   if (!adminProfile?.is_admin) { location.href = 'dashboard.html'; return; }
   setNavUser(adminProfile, session);
+  loadAdminInboxBadge();
 
   // Load client profile
   const { data: client } = await supabase.from('profiles').select('*').eq('id', clientId).single();

@@ -126,7 +126,12 @@ async function sendMessage() {
   const { error } = await supabase.from('messages').insert({
     client_id: currentUid, content, author_id: currentUid, is_from_admin: false
   });
-  if (!error) loadMessages();
+  if (!error) {
+    loadMessages();
+    supabase.functions.invoke('notify-message', {
+      body: { client_id: currentUid, message: content, to_admin: true }
+    }).catch(err => console.warn('Admin notify failed:', err));
+  }
 }
 
 function handleKey(e) {

@@ -67,10 +67,19 @@
 
     <div class="inbox-layout" id="inboxLayout">
       <!-- LEFT: client list -->
-      <div class="inbox-list" id="inboxList">
+      <div style="display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;">
+        <div style="padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <input id="inboxSearch" type="text" placeholder="Search clients…"
+            style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:0.82rem;color:var(--white);font-family:var(--font);"
+            oninput="filterInbox(this.value)" />
+        </div>
+        <div class="inbox-list" id="inboxList" style="border-right:none;flex:1;overflow-y:auto;">
         <div class="empty-state" style="padding:40px 20px;">
           <div class="empty-state-icon">💬</div>
           <p>Loading conversations…</p>
+        </div>
+      </div>
+
         </div>
       </div>
 
@@ -271,11 +280,21 @@ function handleReplyKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
 }
 
+function filterInbox(query) {
+  const q = query.toLowerCase().trim();
+  document.querySelectorAll('.inbox-client-row').forEach(row => {
+    const name = (row.querySelector('.inbox-client-name')?.textContent || '').toLowerCase();
+    const biz  = (row.querySelector('.inbox-client-biz')?.textContent  || '').toLowerCase();
+    row.style.display = (!q || name.includes(q) || biz.includes(q)) ? '' : 'none';
+  });
+}
+
 (async () => {
   const session = await requireAuth(); if (!session) return;
   const profile = await getProfile(session.user.id);
   if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
   setNavUser(profile, session);
+  loadAdminInboxBadge();
   loadInbox();
 })();
 </script>

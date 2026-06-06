@@ -109,8 +109,9 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at  timestamptz DEFAULT now()
 );
 
--- ── Migration: add due_date to existing projects table ────────────────────────
+-- ── Migration: add due_date and progress to existing projects table ───────────
 -- ALTER TABLE projects ADD COLUMN IF NOT EXISTS due_date date;
+-- ALTER TABLE projects ADD COLUMN IF NOT EXISTS progress integer DEFAULT NULL CHECK (progress >= 0 AND progress <= 100);
 -- ─────────────────────────────────────────────────────────────────────────────
 
 -- ─────────────────────────────────────────────────────────────────────────────

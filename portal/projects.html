@@ -89,7 +89,7 @@ async function loadProjects(uid) {
   empty.style.display = 'none';
   const today = new Date(); today.setHours(0,0,0,0);
   cards.innerHTML = data.map(p => {
-    const pct       = statusProgress[p.status] || 0;
+    const pct       = p.status === 'complete' ? 100 : (p.progress ?? statusProgress[p.status] ?? 0);
     const isOverdue = p.due_date && p.status !== 'complete' && new Date(p.due_date) < today;
     const dueLabel  = p.due_date
       ? `<div style="font-size:0.75rem;margin-top:10px;color:${isOverdue ? '#f87171' : 'var(--gray)'};">

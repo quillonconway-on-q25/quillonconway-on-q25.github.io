@@ -31,6 +31,7 @@
       <a href="admin-inbox.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Inbox
+        <span class="nav-unread" id="inboxBadgeNav" style="display:none;"></span>
       </a>
       <a href="admin-team.html" class="active">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
@@ -243,6 +244,7 @@ async function removeAdmin(id, name) {
   if (!profile?.is_admin) { location.href = 'dashboard.html'; return; }
   currentAdminId = session.user.id;
   setNavUser(profile, session);
+  loadAdminInboxBadge();
   loadTeam();
 })();
 </script>
