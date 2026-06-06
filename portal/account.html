@@ -216,10 +216,14 @@ function showToast(msg, type = 'success') {
 
     if (newPw !== confPw) {
       showToast('Passwords do not match', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Update Password';
       return;
     }
     if (newPw.length < 8) {
       showToast('Password must be at least 8 characters', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Update Password';
       return;
     }
 

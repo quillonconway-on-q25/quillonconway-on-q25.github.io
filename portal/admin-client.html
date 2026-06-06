@@ -381,6 +381,11 @@ async function sendAdminMessage() {
   const { data: { session } } = await supabase.auth.getSession();
   await supabase.from('messages').insert({ client_id: clientId, content, author_id: session.user.id, is_from_admin: true });
   loadMessages();
+
+  // Email notification (non-blocking)
+  supabase.functions.invoke('notify-message', {
+    body: { client_id: clientId, message: content }
+  }).catch(err => console.warn('Email notify failed:', err));
 }
 
 function handleMsgKey(e) {
