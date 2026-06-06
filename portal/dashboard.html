@@ -95,7 +95,7 @@
         <div class="stat-card-value" id="statEvents">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">Messages</div>
+        <div class="stat-card-label">Unread Messages</div>
         <div class="stat-card-value" id="statMessages">—</div>
       </div>
       <div class="stat-card">
@@ -206,7 +206,7 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
   const [filesRes, eventsRes, msgsRes, projsRes] = await Promise.all([
     supabase.from('files').select('id', { count: 'exact', head: true }).eq('client_id', uid),
     supabase.from('schedule_items').select('id', { count: 'exact', head: true }).eq('client_id', uid).eq('status', 'upcoming').gte('scheduled_date', new Date().toISOString()),
-    supabase.from('messages').select('id', { count: 'exact', head: true }).eq('client_id', uid),
+    supabase.from('messages').select('id', { count: 'exact', head: true }).eq('client_id', uid).eq('is_from_admin', true).eq('is_read', false),
     supabase.from('projects').select('id', { count: 'exact', head: true }).eq('client_id', uid).neq('status', 'complete'),
   ]);
   document.getElementById('statFiles').textContent    = filesRes.count ?? 0;

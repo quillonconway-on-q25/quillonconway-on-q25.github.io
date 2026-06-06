@@ -64,10 +64,11 @@
   </main>
 </div>
 
-<!-- ADD EVENT MODAL -->
-<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;">
+<!-- ADD / EDIT EVENT MODAL -->
+<div id="modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;width:100%;max-width:460px;margin:24px;">
-    <h2 style="font-size:1.1rem;margin-bottom:24px;">Add Event</h2>
+    <h2 id="modalTitle" style="font-size:1.1rem;margin-bottom:24px;">Add Event</h2>
+    <input type="hidden" id="evId" />
     <form id="eventForm">
       <div class="form-group">
         <label>Title *</label>
@@ -83,7 +84,7 @@
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Event</button>
+        <button type="submit" class="btn btn-primary" id="modalSaveBtn">Save Event</button>
       </div>
     </form>
   </div>
@@ -113,7 +114,28 @@ function showToast(msg, type='success') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-function openModal()  { document.getElementById('modal').style.display = 'flex'; }
+function openModal() {
+  document.getElementById('evId').value    = '';
+  document.getElementById('modalTitle').textContent  = 'Add Event';
+  document.getElementById('modalSaveBtn').textContent = 'Save Event';
+  document.getElementById('eventForm').reset();
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function openEditModal(id, title, scheduledDate, desc) {
+  document.getElementById('evId').value   = id;
+  document.getElementById('evTitle').value = title;
+  // Format ISO → datetime-local (YYYY-MM-DDTHH:MM)
+  const local = new Date(scheduledDate);
+  const pad   = n => String(n).padStart(2,'0');
+  document.getElementById('evDate').value =
+    `${local.getFullYear()}-${pad(local.getMonth()+1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}`;
+  document.getElementById('evDesc').value  = desc || '';
+  document.getElementById('modalTitle').textContent   = 'Edit Event';
+  document.getElementById('modalSaveBtn').textContent  = 'Save Changes';
+  document.getElementById('modal').style.display = 'flex';
+}
+
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 const statusBadge = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
@@ -125,7 +147,9 @@ async function loadSchedule() {
   if (!data?.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   list.innerHTML = data.map(e => {
-    const d = new Date(e.scheduled_date);
+    const d    = new Date(e.scheduled_date);
+    const safeTitle = e.title.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const safeDesc  = (e.description||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     return `<div class="schedule-item">
       <div class="schedule-date-badge">
         <div class="month">${d.toLocaleString('en-US',{month:'short'})}</div>
@@ -139,8 +163,10 @@ async function loadSchedule() {
         <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
         ${e.description ? `<div class="schedule-desc">${e.description}</div>` : ''}
       </div>
-      <div style="display:flex;gap:6px;">
-        ${e.status==='upcoming' ? `<button class="btn btn-outline btn-sm" onclick="markDone('${e.id}')">Mark Done</button>` : ''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${e.status==='upcoming' ? `
+          <button class="btn btn-outline btn-sm" onclick="openEditModal('${e.id}','${safeTitle}','${e.scheduled_date}','${safeDesc}')">Edit</button>
+          <button class="btn btn-outline btn-sm" onclick="markDone('${e.id}')">Mark Done</button>` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">Delete</button>
       </div>
     </div>`;
@@ -160,18 +186,31 @@ async function deleteEvent(id) {
 
 document.getElementById('eventForm').addEventListener('submit', async e => {
   e.preventDefault();
+  const id    = document.getElementById('evId').value;
   const title = document.getElementById('evTitle').value.trim();
   const date  = document.getElementById('evDate').value;
   const desc  = document.getElementById('evDesc').value.trim();
   if (!title || !date) return;
-  const { error } = await supabase.from('schedule_items').insert({
-    client_id: currentUid, title, scheduled_date: date,
-    description: desc || null, status: 'upcoming'
-  });
-  if (error) { showToast(error.message, 'error'); return; }
+
+  if (id) {
+    // Edit existing
+    const { error } = await supabase.from('schedule_items')
+      .update({ title, scheduled_date: date, description: desc || null })
+      .eq('id', id);
+    if (error) { showToast(error.message, 'error'); return; }
+    showToast('Event updated');
+  } else {
+    // New event
+    const { error } = await supabase.from('schedule_items').insert({
+      client_id: currentUid, title, scheduled_date: date,
+      description: desc || null, status: 'upcoming'
+    });
+    if (error) { showToast(error.message, 'error'); return; }
+    showToast('Event added');
+  }
+
   closeModal();
-  document.getElementById('eventForm').reset();
-  showToast('Event added'); loadSchedule();
+  loadSchedule();
 });
 
 document.getElementById('modal').addEventListener('click', e => {
