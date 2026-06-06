@@ -138,6 +138,7 @@ async function loadFiles() {
         <div class="file-meta">${formatBytes(f.file_size)} · ${formatDate(f.uploaded_at)}</div>
         <div class="file-actions">
           <a href="${url}" target="_blank" class="btn btn-outline btn-sm">View</a>
+          <button id="dl-${f.storage_path}" class="btn btn-primary btn-sm" onclick="downloadFile('${f.storage_path}','${f.filename.replace(/'/g,"\\'")}')">Download</button>
           <button class="btn btn-danger btn-sm" onclick="deleteFile('${f.id}','${f.storage_path}')">Delete</button>
         </div>
       </div>
@@ -170,6 +171,29 @@ async function uploadFile(file) {
   setTimeout(() => prog.classList.remove('visible'), 600);
   showToast(`${file.name} uploaded`);
   loadFiles();
+}
+
+async function downloadFile(storagePath, filename) {
+  const btn = document.getElementById(`dl-${CSS.escape(storagePath)}`);
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  const { data, error } = await supabase.storage.from(BUCKET).download(storagePath);
+
+  if (btn) { btn.disabled = false; btn.textContent = 'Download'; }
+
+  if (error || !data) {
+    showToast('Download failed: ' + (error?.message || 'unknown error'), 'error');
+    return;
+  }
+
+  const url  = URL.createObjectURL(data);
+  const link = document.createElement('a');
+  link.href     = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 async function deleteFile(id, path) {
