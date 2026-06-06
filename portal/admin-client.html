@@ -578,6 +578,18 @@ async function handleAdminUpload(fileList) {
   }
   loadFiles();
   document.getElementById('adminFileInput').value = '';
+
+  // Notify client by email that a deliverable is waiting for their review
+  const count = fileList.length;
+  const label = count === 1 ? `"${fileList[0].name}"` : `${count} files`;
+  supabase.functions.invoke('notify-message', {
+    body: {
+      client_id: clientId,
+      message: `ON-Q25 has uploaded ${label} for your review. Please log in to approve or request changes.`,
+      to_admin: false,
+      subject_override: `New deliverable${count > 1 ? 's' : ''} ready for your review`
+    }
+  }).catch(err => console.warn('Deliverable notify failed:', err));
 }
 
 async function adminDeleteFile(id, path) {

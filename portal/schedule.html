@@ -312,6 +312,14 @@ document.getElementById('modal').addEventListener('click', e => {
   setNavUser(profile, session);
   loadUnreadBadge(currentUid);
   loadSchedule();
+
+  // Real-time: refresh whenever admin adds/edits/deletes an event for this client
+  supabase.channel('schedule-live')
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'schedule_items',
+      filter: `client_id=eq.${currentUid}`
+    }, () => loadSchedule())
+    .subscribe();
 })();
 </script>
 <style>

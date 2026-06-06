@@ -193,6 +193,15 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
   const firstName = cleanedName.split(' ')[0];
   document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName}`;
 
+  await loadDashboardData(uid);
+
+  // Refetch stats + previews whenever the tab becomes visible again
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadDashboardData(uid);
+  });
+})();
+
+async function loadDashboardData(uid) {
   // Counts
   const [filesRes, eventsRes, msgsRes, projsRes] = await Promise.all([
     supabase.from('files').select('id', { count: 'exact', head: true }).eq('client_id', uid),
@@ -312,7 +321,7 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
       </div>`;
     }).join('');
   }
-})();
+}
 </script>
 </body>
 </html>

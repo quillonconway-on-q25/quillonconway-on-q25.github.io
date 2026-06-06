@@ -170,7 +170,11 @@ async function loadInvoices(uid) {
   document.getElementById('statOverdue').textContent = fmt(totalOverdue);
   document.getElementById('statPaid').textContent    = fmt(totalPaid);
 
+  const today = new Date(); today.setHours(0,0,0,0);
   list.innerHTML = data.map(inv => {
+    // Visually flag as overdue if due date has passed but status hasn't been updated
+    const isPastDue = inv.status === 'due' && inv.due_date && new Date(inv.due_date) < today;
+    if (isPastDue) { inv = { ...inv, _pastDue: true }; }
     const items = (allItems || []).filter(it => it.invoice_id === inv.id);
     const lineItemsHtml = items.length ? `
       <div class="inv-items">
@@ -192,11 +196,11 @@ async function loadInvoices(uid) {
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div>
             <div class="invoice-title">${inv.title}</div>
-            ${inv.due_date ? `<div class="invoice-meta">Due ${new Date(inv.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>` : ''}
+            ${inv.due_date ? `<div class="invoice-meta" style="color:${inv._pastDue ? '#f87171' : ''}">Due ${new Date(inv.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>` : ''}
           </div>
           <div class="invoice-right" style="flex-shrink:0;">
             <div class="invoice-amount">${fmt(inv.amount)}</div>
-            <span class="badge ${statusBadge[inv.status] || 'badge-gray'}">${statusLabel[inv.status] || inv.status}</span>
+            <span class="badge ${inv._pastDue ? 'badge-red' : (statusBadge[inv.status] || 'badge-gray')}">${inv._pastDue ? '⚠ Past Due' : (statusLabel[inv.status] || inv.status)}</span>
             ${inv.pdf_url ? `<a href="${inv.pdf_url}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:8px;">View PDF</a>` : ''}
           </div>
         </div>

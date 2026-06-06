@@ -83,6 +83,19 @@
       </div>
     </div>
 
+    <!-- SEARCH + SORT -->
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+      <input id="clientSearch" type="text" placeholder="Search by name or business…"
+        style="flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border-md);border-radius:10px;padding:9px 14px;font-size:0.85rem;color:var(--white);font-family:var(--font);"
+        oninput="filterClients(this.value)" />
+      <select id="clientSort" onchange="filterClients(document.getElementById('clientSearch').value)"
+        style="background:var(--surface);border:1px solid var(--border-md);border-radius:10px;padding:9px 14px;font-size:0.85rem;color:var(--white);font-family:var(--font);cursor:pointer;">
+        <option value="name">Sort: Name A–Z</option>
+        <option value="newest">Sort: Newest</option>
+        <option value="oldest">Sort: Oldest</option>
+      </select>
+    </div>
+
     <!-- CLIENT LIST -->
     <div id="clientGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
     <div id="emptyClients" class="empty-state" style="display:none;">
@@ -281,7 +294,35 @@ async function loadClients() {
   // Update inbox badge in sidebar
   const navBadge = document.getElementById('inboxBadgeNav');
   if (navBadge) { navBadge.textContent = needsReply; navBadge.style.display = needsReply > 0 ? 'inline-flex' : 'none'; }
-  document.getElementById('clientGrid').innerHTML = cards.join('');
+
+  // Store for search/sort filtering
+  allClientCards = clients.map((c, i) => ({ client: c, card: cards[i] }));
+  renderClientGrid(allClientCards);
+}
+
+let allClientCards = [];
+
+function filterClients(query) {
+  const q   = (query || '').toLowerCase().trim();
+  const sort = document.getElementById('clientSort')?.value || 'name';
+  let filtered = allClientCards.filter(({ client: c }) =>
+    !q || (c.full_name||'').toLowerCase().includes(q) || (c.business_name||'').toLowerCase().includes(q)
+  );
+  if (sort === 'name')    filtered.sort((a,b) => (a.client.full_name||'').localeCompare(b.client.full_name||''));
+  if (sort === 'newest')  filtered.sort((a,b) => new Date(b.client.created_at) - new Date(a.client.created_at));
+  if (sort === 'oldest')  filtered.sort((a,b) => new Date(a.client.created_at) - new Date(b.client.created_at));
+  renderClientGrid(filtered);
+}
+
+function renderClientGrid(rows) {
+  const grid  = document.getElementById('clientGrid');
+  const empty = document.getElementById('emptyClients');
+  if (!rows.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>No clients match your search</p></div>';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = rows.map(r => r.card).join('');
 }
 
 function openEditModal(id, name, biz) {

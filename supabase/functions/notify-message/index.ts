@@ -61,7 +61,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { client_id, message, to_admin } = await req.json()
+    const { client_id, message, to_admin, subject_override } = await req.json()
     if (!client_id || !message) {
       return new Response(JSON.stringify({ error: 'Missing client_id or message' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -109,7 +109,7 @@ serve(async (req) => {
         ctaUrl:     'https://on-q25.com/portal/messages.html',
         footer:     'You\'re receiving this because you have an active account with ON-Q25.',
       })
-      result = await sendEmail(clientEmail, 'New message from ON-Q25', html)
+      result = await sendEmail(clientEmail, subject_override || 'New message from ON-Q25', html)
     }
 
     return new Response(JSON.stringify({ ok: true, id: result.id }), {
