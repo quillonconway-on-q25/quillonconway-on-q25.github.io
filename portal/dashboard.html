@@ -112,12 +112,7 @@
           Upcoming Schedule
           <a href="schedule.html" style="font-size:0.78rem;font-weight:500;color:var(--blue-lt);">View all →</a>
         </div>
-        <div id="schedulePreview">
-          <div class="empty-state" style="padding:32px;">
-            <div class="empty-state-icon">📅</div>
-            <p>No upcoming events</p>
-          </div>
-        </div>
+        <div id="schedulePreview"><div class="loading-state">Loading…</div></div>
       </div>
 
       <!-- RECENT MESSAGES -->
@@ -126,12 +121,7 @@
           Recent Messages
           <a href="messages.html" style="font-size:0.78rem;font-weight:500;color:var(--blue-lt);">View all →</a>
         </div>
-        <div id="messagesPreview">
-          <div class="empty-state" style="padding:32px;">
-            <div class="empty-state-icon">💬</div>
-            <p>No messages yet</p>
-          </div>
-        </div>
+        <div id="messagesPreview"><div class="loading-state">Loading…</div></div>
       </div>
 
     </div>
@@ -142,12 +132,7 @@
         Project Status
         <a href="projects.html" style="font-size:0.78rem;font-weight:500;color:var(--blue-lt);">View all →</a>
       </div>
-      <div id="projectsPreview">
-        <div class="empty-state" style="padding:32px;">
-          <div class="empty-state-icon">🚀</div>
-          <p>No active projects</p>
-        </div>
-      </div>
+      <div id="projectsPreview"><div class="loading-state">Loading…</div></div>
     </div>
 
     <!-- RECENT ACTIVITY -->
@@ -259,6 +244,8 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
         </div>
       </div>`;
     }).join('');
+  } else {
+    document.getElementById('schedulePreview').innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">📅</div><p>No upcoming events</p></div>`;
   }
 
   // Messages preview
@@ -269,6 +256,8 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
         <div class="bubble-content">${m.content}</div>
         <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${formatDate(m.created_at)}</div>
       </div>`).join('');
+  } else {
+    document.getElementById('messagesPreview').innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💬</div><p>No messages yet</p></div>`;
   }
 
   // Projects preview
@@ -295,6 +284,8 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
         <span class="badge ${statusBadge[p.status] || 'badge-gray'}">${statusLabel[p.status] || p.status}</span>
       </div>`;
     }).join('');
+  } else {
+    document.getElementById('projectsPreview').innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">🚀</div><p>No active projects</p></div>`;
   }
 
   // Recent activity feed

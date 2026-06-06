@@ -52,7 +52,7 @@
       <p>Track the status of everything ON-Q25 is working on for you.</p>
     </div>
 
-    <div id="projectCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+    <div id="projectCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"><div class="loading-state">Loading…</div></div>
     <div id="emptyProjects" class="empty-state" style="display:none;">
       <div class="empty-state-icon">🚀</div>
       <h3>No projects yet</h3>
@@ -82,7 +82,8 @@ const statusLabel    = { not_started: 'Not Started', in_progress: 'In Progress',
 const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', review: 'badge-yellow', complete: 'badge-green' };
 
 async function loadProjects(uid) {
-  const { data } = await supabase.from('projects').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+  const { data, error } = await supabase.from('projects').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+  if (error) { cards.innerHTML = errorHtml; return; }
   const cards = document.getElementById('projectCards');
   const empty = document.getElementById('emptyProjects');
   if (!data?.length) { cards.innerHTML = ''; empty.style.display = 'block'; return; }

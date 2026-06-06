@@ -93,7 +93,7 @@
     </div>
 
     <div class="card">
-      <div id="invoiceList"></div>
+      <div id="invoiceList"><div class="loading-state">Loading…</div></div>
       <div id="emptyInvoices" class="empty-state" style="display:none;">
         <div class="empty-state-icon">🧾</div>
         <h3>No invoices yet</h3>
@@ -144,8 +144,9 @@ const statusLabel = { due: 'Due', overdue: 'Overdue', paid: 'Paid' };
 const statusBadge = { due: 'badge-blue', overdue: 'badge-red', paid: 'badge-green' };
 
 async function loadInvoices(uid) {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('invoices').select('*').eq('client_id', uid).order('created_at', { ascending: false });
+  if (error) { list.innerHTML = errorHtml; return; }
 
   const list  = document.getElementById('invoiceList');
   const empty = document.getElementById('emptyInvoices');

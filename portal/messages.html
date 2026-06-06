@@ -54,7 +54,7 @@
     </div>
 
     <div class="card" style="max-width:760px;">
-      <div class="message-thread" id="messageThread">
+      <div class="message-thread" id="messageThread"><div class="loading-state">Loading…</div>
         <div class="empty-state" style="padding:32px;">
           <div class="empty-state-icon">💬</div>
           <h3>No messages yet</h3>
@@ -87,7 +87,8 @@
 let currentUid = null;
 
 async function loadMessages() {
-  const { data } = await supabase.from('messages').select('*').eq('client_id', currentUid).order('created_at');
+  const { data, error } = await supabase.from('messages').select('*').eq('client_id', currentUid).order('created_at');
+  if (error) { thread.innerHTML = errorHtml; return; }
   const thread = document.getElementById('messageThread');
   if (!data?.length) {
     thread.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💬</div><h3>No messages yet</h3><p>Send a message to the ON-Q25 team below.</p></div>`;
@@ -98,7 +99,7 @@ async function loadMessages() {
       <div class="bubble-content">${escHtml(m.content)}</div>
       <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${formatDate(m.created_at)} ${formatTime(m.created_at)}</div>
     </div>`).join('');
-  thread.scrollTop = thread.scrollHeight;
+  requestAnimationFrame(() => { thread.scrollTop = thread.scrollHeight; });
 
   // Mark all unread admin messages as read
   const unread = data.filter(m => m.is_from_admin && !m.is_read);

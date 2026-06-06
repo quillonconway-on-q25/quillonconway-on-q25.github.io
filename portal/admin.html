@@ -132,7 +132,12 @@
     </div>
     <div class="form-group">
       <label>Temporary Password</label>
-      <input class="form-input" type="text" id="invitePassword" placeholder="They can change this later" value="OnQ25Client!" />
+      <div style="display:flex;gap:8px;">
+        <input class="form-input" type="text" id="invitePassword" placeholder="Auto-generated" style="flex:1;font-family:monospace;letter-spacing:0.04em;" readonly />
+        <button type="button" class="btn btn-outline" onclick="regeneratePassword()" title="Generate new password" style="flex-shrink:0;padding:0 12px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+      </div>
     </div>
     <div id="inviteErr" style="color:#f87171;font-size:0.8rem;margin-bottom:12px;display:none;"></div>
     <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -312,6 +317,20 @@ async function deleteClient(id, name) {
   await supabase.from('profiles').delete().eq('id', id);
   showToast(`${name} removed`);
   loadClients();
+}
+
+function generatePassword() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const special = '!@#$';
+  let pw = 'ONQ-';
+  for (let i = 0; i < 6; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+  pw += special[Math.floor(Math.random() * special.length)];
+  pw += Math.floor(Math.random() * 90 + 10);
+  return pw;
+}
+
+function regeneratePassword() {
+  document.getElementById('invitePassword').value = generatePassword();
 }
 
 async function inviteClient() {

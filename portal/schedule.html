@@ -68,7 +68,7 @@
     <!-- LIST VIEW -->
     <div id="listView">
       <div class="card">
-        <div id="scheduleList"></div>
+        <div id="scheduleList"><div class="loading-state">Loading…</div></div>
         <div id="emptySchedule" class="empty-state" style="display:none;">
           <div class="empty-state-icon">📅</div>
           <h3>No events yet</h3>
@@ -226,8 +226,9 @@ function closeModal() { document.getElementById('modal').style.display = 'none';
 const statusBadge = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
 
 async function loadSchedule() {
-  const { data } = await supabase.from('schedule_items').select('*').eq('client_id', currentUid).order('scheduled_date');
+  const { data, error } = await supabase.from('schedule_items').select('*').eq('client_id', currentUid).order('scheduled_date');
   allEvents = data || [];
+  if (error) { document.getElementById('scheduleList').innerHTML = errorHtml; return; }
   if (currentView === 'calendar') { renderCalendar(); return; }
   const list  = document.getElementById('scheduleList');
   const empty = document.getElementById('emptySchedule');
@@ -373,9 +374,23 @@ document.getElementById('modal').addEventListener('click', e => {
 .cal-ev-completed  { background: rgba(74,222,128,0.15); color: #4ade80; }
 .cal-ev-cancelled  { background: rgba(107,114,128,0.15); color: var(--gray); text-decoration: line-through; }
 
-@media (max-width: 600px) {
-  .cal-day { min-height: 56px; padding: 4px; }
-  .cal-event { font-size: 0.6rem; padding: 1px 3px; }
+@media (max-width: 640px) {
+  /* On mobile: shrink cells to number + dots only */
+  .cal-day  { min-height: 48px; padding: 4px 2px; }
+  .cal-dow  { padding: 6px 2px; font-size: 0.62rem; }
+
+  /* Hide event text, show as colored dot instead */
+  .cal-event {
+    font-size: 0;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    padding: 0;
+    margin: 1px auto;
+    display: block;
+  }
+  .cal-ev-upcoming  { background: var(--blue-lt); }
+  .cal-ev-completed { background: var(--green); }
+  .cal-ev-cancelled { background: var(--gray); }
 }
 </style>
 </body>

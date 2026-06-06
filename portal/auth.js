@@ -66,6 +66,10 @@ function cleanName(raw) {
   return raw;
 }
 
+// Shared HTML snippets for loading / error states
+const loadingHtml = '<div class="loading-state">Loading…</div>';
+const errorHtml   = '<div class="error-state">Something went wrong — <a href="" onclick="location.reload();return false;">try refreshing</a></div>';
+
 // Log an activity event — fire-and-forget, never blocks the UI
 function logActivity(clientId, actorRole, action, entityType, entityName) {
   supabase.from('activity_log').insert({

@@ -518,6 +518,31 @@ td.td-main { color: var(--white); font-weight: 500; }
 .empty-state { text-align: center; padding: 48px 24px; color: var(--gray); }
 .empty-state-icon { font-size: 2rem; margin-bottom: 10px; opacity: 0.35; }
 .empty-state h3 { color: var(--off-white); font-size: 0.925rem; margin-bottom: 5px; }
+
+/* Loading spinner */
+@keyframes portal-spin { to { transform: rotate(360deg); } }
+.loading-state {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 48px 24px;
+  font-size: 0.85rem; color: var(--gray);
+}
+.loading-state::before {
+  content: '';
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 2px solid var(--border-md);
+  border-top-color: var(--blue-lt);
+  border-radius: 50%;
+  animation: portal-spin 0.7s linear infinite;
+}
+
+/* Error state */
+.error-state {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 40px 24px; text-align: center;
+  font-size: 0.85rem; color: #f87171;
+}
+.error-state a { color: var(--blue-lt); text-decoration: none; }
+.error-state a:hover { text-decoration: underline; }
 .empty-state p  { font-size: 0.8rem; }
 
 /* ===== DIVIDER ===== */
