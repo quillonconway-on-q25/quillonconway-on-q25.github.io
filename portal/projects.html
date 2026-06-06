@@ -87,17 +87,24 @@ async function loadProjects(uid) {
   const empty = document.getElementById('emptyProjects');
   if (!data?.length) { cards.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
+  const today = new Date(); today.setHours(0,0,0,0);
   cards.innerHTML = data.map(p => {
-    const pct = statusProgress[p.status] || 0;
+    const pct       = statusProgress[p.status] || 0;
+    const isOverdue = p.due_date && p.status !== 'complete' && new Date(p.due_date) < today;
+    const dueLabel  = p.due_date
+      ? `<div style="font-size:0.75rem;margin-top:10px;color:${isOverdue ? '#f87171' : 'var(--gray)'};">
+           ${isOverdue ? '⚠ Overdue · ' : 'Due '}${new Date(p.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+         </div>`
+      : '';
     return `<div class="card">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
-        <div>
+        <div style="flex:1;min-width:0;">
           <div style="font-size:1rem;font-weight:700;">${p.name}</div>
           ${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:4px;">${p.description}</div>` : ''}
         </div>
-        <span class="badge ${statusBadge[p.status]||'badge-gray'}">${statusLabel[p.status]||p.status}</span>
+        <span class="badge ${statusBadge[p.status]||'badge-gray'}" style="flex-shrink:0;margin-left:10px;">${statusLabel[p.status]||p.status}</span>
       </div>
-      <div style="margin-bottom:8px;">
+      <div>
         <div style="display:flex;justify-content:space-between;font-size:0.75rem;color:var(--gray);margin-bottom:6px;">
           <span>Progress</span><span>${pct}%</span>
         </div>
@@ -105,7 +112,7 @@ async function loadProjects(uid) {
           <div class="progress-bar-fill" style="width:${pct}%"></div>
         </div>
       </div>
-      <div style="font-size:0.75rem;color:var(--gray);margin-top:12px;">Added ${formatDate(p.created_at)}</div>
+      ${dueLabel}
     </div>`;
   }).join('');
 }

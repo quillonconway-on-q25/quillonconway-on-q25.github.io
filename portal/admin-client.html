@@ -166,6 +166,10 @@
         <option value="complete">Complete</option>
       </select>
     </div>
+    <div class="form-group">
+      <label>Due Date</label>
+      <input class="form-input" type="date" id="projDueDate" />
+    </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
       <button class="btn btn-outline" onclick="closeModal('projectModal')">Cancel</button>
       <button class="btn btn-primary" onclick="addProject()">Add Project</button>
@@ -286,14 +290,23 @@ async function loadProjects() {
     el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚀</div><h3>No projects yet</h3><p>Add the first project for this client.</p></div>`;
     return;
   }
-  el.innerHTML = data.map(p => `
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = data.map(p => {
+    const isOverdue = p.due_date && p.status !== 'complete' && new Date(p.due_date) < today;
+    const dueStr    = p.due_date
+      ? `<span style="color:${isOverdue ? '#f87171' : 'var(--gray)'};">
+           ${isOverdue ? '⚠ Overdue · ' : 'Due '}${new Date(p.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+         </span>`
+      : '';
+    return `
     <div class="card" style="margin-bottom:12px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;">
+        <div style="flex:1;min-width:0;">
           <div style="font-weight:700;font-size:0.95rem;">${p.name}</div>
           ${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:3px;">${p.description}</div>` : ''}
+          ${p.due_date ? `<div style="font-size:0.75rem;margin-top:5px;">${dueStr}</div>` : ''}
         </div>
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
           <select class="form-select" style="width:auto;padding:5px 10px;font-size:0.8rem;" onchange="updateProjectStatus('${p.id}', this.value)">
             <option value="not_started" ${p.status==='not_started'?'selected':''}>Not Started</option>
             <option value="in_progress" ${p.status==='in_progress'?'selected':''}>In Progress</option>
@@ -312,18 +325,19 @@ async function loadProjects() {
           <div class="progress-bar-fill" style="width:${statusProgress[p.status]}%"></div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function addProject() {
-  const name   = document.getElementById('projName').value.trim();
-  const desc   = document.getElementById('projDesc').value.trim();
-  const status = document.getElementById('projStatus').value;
+  const name    = document.getElementById('projName').value.trim();
+  const desc    = document.getElementById('projDesc').value.trim();
+  const status  = document.getElementById('projStatus').value;
+  const dueDate = document.getElementById('projDueDate').value || null;
   if (!name) return;
-  await supabase.from('projects').insert({ client_id: clientId, name, description: desc||null, status });
+  await supabase.from('projects').insert({ client_id: clientId, name, description: desc||null, status, due_date: dueDate });
   closeModal('projectModal');
-  document.getElementById('projName').value = '';
-  document.getElementById('projDesc').value = '';
+  ['projName','projDesc','projDueDate'].forEach(id => document.getElementById(id).value = '');
   showToast('Project added');
   loadProjects();
 }

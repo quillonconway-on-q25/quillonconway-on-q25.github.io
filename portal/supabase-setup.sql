@@ -104,9 +104,14 @@ CREATE TABLE IF NOT EXISTS projects (
   description text,
   status      text DEFAULT 'in_progress'
               CHECK (status IN ('not_started','in_progress','review','complete')),
+  due_date    date,
   created_at  timestamptz DEFAULT now(),
   updated_at  timestamptz DEFAULT now()
 );
+
+-- ── Migration: add due_date to existing projects table ────────────────────────
+-- ALTER TABLE projects ADD COLUMN IF NOT EXISTS due_date date;
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- ROW LEVEL SECURITY
