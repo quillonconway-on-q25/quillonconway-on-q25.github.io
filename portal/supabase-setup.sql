@@ -37,14 +37,23 @@ CREATE TRIGGER on_auth_user_created
 
 -- 2. FILES
 CREATE TABLE IF NOT EXISTS files (
-  id           uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  client_id    uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  filename     text NOT NULL,
-  storage_path text NOT NULL,
-  file_type    text,
-  file_size    bigint,
-  uploaded_at  timestamptz DEFAULT now()
+  id                 uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id          uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  filename           text NOT NULL,
+  storage_path       text NOT NULL,
+  file_type          text,
+  file_size          bigint,
+  uploaded_by_admin  boolean NOT NULL DEFAULT false,
+  approval_status    text CHECK (approval_status IN ('pending','approved','changes_requested')),
+  approval_note      text,
+  uploaded_at        timestamptz DEFAULT now()
 );
+
+-- ── Migration: add approval columns to existing files table ───────────────────
+-- ALTER TABLE files ADD COLUMN IF NOT EXISTS uploaded_by_admin boolean NOT NULL DEFAULT false;
+-- ALTER TABLE files ADD COLUMN IF NOT EXISTS approval_status text CHECK (approval_status IN ('pending','approved','changes_requested'));
+-- ALTER TABLE files ADD COLUMN IF NOT EXISTS approval_note text;
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- 3. SCHEDULE ITEMS
 CREATE TABLE IF NOT EXISTS schedule_items (

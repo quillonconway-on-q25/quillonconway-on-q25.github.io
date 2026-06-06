@@ -106,11 +106,25 @@
 
     <!-- FILES TAB -->
     <div id="tab-files" class="tab-panel" style="display:none;">
+      <!-- Admin upload deliverable -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:0.82rem;color:var(--gray);">Upload files for this client to review and approve.</div>
+        <button class="btn btn-primary" onclick="document.getElementById('adminFileInput').click()">
+          + Send Deliverable
+        </button>
+        <input type="file" id="adminFileInput" style="display:none;" multiple accept="image/*,video/*,.pdf,.doc,.docx" onchange="handleAdminUpload(this.files)" />
+      </div>
+      <div class="upload-progress" id="adminUploadProgress" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.8rem;">
+          <span id="adminUploadFileName">Uploading…</span><span id="adminUploadPct">0%</span>
+        </div>
+        <div class="upload-bar-wrap"><div class="upload-bar" id="adminUploadBar"></div></div>
+      </div>
       <div id="fileGrid" class="file-grid"></div>
-      <div id="emptyFiles" class="empty-state">
+      <div id="emptyFiles" class="empty-state" style="display:none;">
         <div class="empty-state-icon">📂</div>
-        <h3>No files uploaded</h3>
-        <p>The client hasn't uploaded any files yet.</p>
+        <h3>No files yet</h3>
+        <p>Upload a deliverable above or wait for the client to share files.</p>
       </div>
     </div>
 
@@ -419,6 +433,14 @@ async function deleteEvent(id) {
 }
 
 // ── FILES ─────────────────────────────────────────────────────────────────────
+const BUCKET = 'client-files';
+
+const approvalBadgeMap = {
+  approved:           '<span class="badge badge-green">✓ Approved</span>',
+  changes_requested:  '<span class="badge badge-yellow">Changes Requested</span>',
+  pending:            '<span class="badge badge-gray">Awaiting Review</span>',
+};
+
 async function loadFiles() {
   const { data } = await supabase.from('files').select('*').eq('client_id', clientId).order('uploaded_at', {ascending:false});
   const grid  = document.getElementById('fileGrid');
@@ -426,21 +448,69 @@ async function loadFiles() {
   if (!data?.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
   grid.innerHTML = data.map(f => {
-    const { data: urlData } = supabase.storage.from('client-files').getPublicUrl(f.storage_path);
-    const url  = urlData?.publicUrl;
-    const icon = f.file_type?.startsWith('image/') ? `<img src="${url}" alt="${f.filename}" loading="lazy"/>` :
-                 f.file_type?.startsWith('video/') ? `<video src="${url}" muted></video>` : '📄';
+    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(f.storage_path);
+    const url   = urlData?.publicUrl;
+    const thumb = f.file_type?.startsWith('image/') ? `<img src="${url}" alt="${f.filename}" loading="lazy"/>` :
+                  f.file_type?.startsWith('video/') ? `<video src="${url}" muted></video>` :
+                  `<span style="font-size:2rem">📄</span>`;
+    const tag = f.uploaded_by_admin
+      ? `<span style="font-size:0.68rem;font-weight:600;color:var(--blue-lt);text-transform:uppercase;letter-spacing:0.05em;">Deliverable</span>`
+      : `<span style="font-size:0.68rem;color:var(--gray);">Client upload</span>`;
+    const approval = f.uploaded_by_admin
+      ? `<div style="margin-top:6px;">${approvalBadgeMap[f.approval_status || 'pending'] || ''}</div>
+         ${f.approval_note ? `<div style="font-size:0.72rem;color:var(--gray);margin-top:4px;">"${f.approval_note}"</div>` : ''}`
+      : '';
     return `<div class="file-item">
-      <div class="file-thumb">${typeof icon === 'string' && icon.startsWith('<') ? icon : `<span style="font-size:2rem">${icon}</span>`}</div>
+      <div class="file-thumb">${thumb}</div>
       <div class="file-info">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;">${tag}</div>
         <div class="file-name" title="${f.filename}">${f.filename}</div>
         <div class="file-meta">${formatBytes(f.file_size)} · ${formatDate(f.uploaded_at)}</div>
-        <div class="file-actions">
+        ${approval}
+        <div class="file-actions" style="margin-top:8px;">
           <a href="${url}" target="_blank" class="btn btn-outline btn-sm">View</a>
+          <button class="btn btn-danger btn-sm" onclick="adminDeleteFile('${f.id}','${f.storage_path}')">Delete</button>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+async function handleAdminUpload(fileList) {
+  const prog = document.getElementById('adminUploadProgress');
+  const bar  = document.getElementById('adminUploadBar');
+  const pct  = document.getElementById('adminUploadPct');
+  const name = document.getElementById('adminUploadFileName');
+
+  for (const file of fileList) {
+    prog.classList.add('visible');
+    name.textContent = file.name;
+    bar.style.width  = '0%'; pct.textContent = '0%';
+
+    const path = `${clientId}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, { upsert: false });
+    if (upErr) { showToast('Upload failed: ' + upErr.message, 'error'); prog.classList.remove('visible'); continue; }
+
+    bar.style.width = '80%'; pct.textContent = '80%';
+    await supabase.from('files').insert({
+      client_id: clientId, filename: file.name,
+      storage_path: path, file_type: file.type, file_size: file.size,
+      uploaded_by_admin: true, approval_status: 'pending'
+    });
+    bar.style.width = '100%'; pct.textContent = '100%';
+    setTimeout(() => prog.classList.remove('visible'), 500);
+    showToast(`${file.name} sent to client`);
+  }
+  loadFiles();
+  document.getElementById('adminFileInput').value = '';
+}
+
+async function adminDeleteFile(id, path) {
+  if (!confirm('Delete this file?')) return;
+  await supabase.storage.from(BUCKET).remove([path]);
+  await supabase.from('files').delete().eq('id', id);
+  showToast('File deleted');
+  loadFiles();
 }
 
 // ── INVOICES ──────────────────────────────────────────────────────────────────
