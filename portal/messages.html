@@ -128,6 +128,7 @@ async function sendMessage() {
   });
   if (!error) {
     loadMessages();
+    logActivity(currentUid, 'client', 'Sent a message', 'message', null);
     supabase.functions.invoke('notify-message', {
       body: { client_id: currentUid, message: content, to_admin: true }
     }).catch(err => console.warn('Admin notify failed:', err));

@@ -83,7 +83,25 @@ CREATE TABLE IF NOT EXISTS messages (
 --   UPDATE messages SET is_read = true WHERE created_at < now(); -- mark old messages read
 -- ────────────────────────────────────────────────────────────────────────────────
 
--- 5. INVOICES
+-- 5. ACTIVITY LOG
+CREATE TABLE IF NOT EXISTS activity_log (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id   uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  actor_role  text NOT NULL CHECK (actor_role IN ('admin','client')),
+  action      text NOT NULL,
+  entity_type text,
+  entity_name text,
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own_activity"   ON activity_log FOR ALL USING (client_id = auth.uid());
+CREATE POLICY "admin_activity" ON activity_log FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
+
+-- ── Migration: create activity_log ───────────────────────────────────────────
+-- Run the CREATE TABLE and policies above if adding to an existing project.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- 6. INVOICES
 CREATE TABLE IF NOT EXISTS invoices (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   client_id   uuid REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -140,6 +158,26 @@ CREATE POLICY "admin_schedule"  ON schedule_items FOR ALL USING ((SELECT is_admi
 CREATE POLICY "admin_messages"  ON messages       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
 CREATE POLICY "admin_projects"  ON projects       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
 CREATE POLICY "admin_invoices"  ON invoices       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
+
+-- 7. INVOICE LINE ITEMS
+CREATE TABLE IF NOT EXISTS invoice_line_items (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  invoice_id  uuid REFERENCES invoices(id) ON DELETE CASCADE,
+  description text NOT NULL,
+  quantity    numeric(10,2) DEFAULT 1,
+  unit_price  numeric(10,2) NOT NULL,
+  sort_order  int DEFAULT 0,
+  created_at  timestamptz DEFAULT now()
+);
+ALTER TABLE invoice_line_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "own_line_items"   ON invoice_line_items FOR ALL USING (
+  EXISTS (SELECT 1 FROM invoices WHERE id = invoice_id AND client_id = auth.uid()));
+CREATE POLICY "admin_line_items" ON invoice_line_items FOR ALL USING (
+  (SELECT is_admin FROM profiles WHERE id = auth.uid()));
+
+-- ── Migration: add invoice_line_items table ───────────────────────────────────
+-- Run the CREATE TABLE and policies above if adding to an existing project.
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- ── Migration: add invoices table to existing project ─────────────────────────
 -- Run this if tables already exist:

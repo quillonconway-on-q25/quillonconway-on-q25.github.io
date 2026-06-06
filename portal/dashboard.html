@@ -149,6 +149,12 @@
         </div>
       </div>
     </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="card" style="margin-top:20px;" id="activityCard" style="display:none;">
+      <div class="section-title">Recent Activity</div>
+      <div id="activityFeed"></div>
+    </div>
   </main>
 </div>
 
@@ -287,6 +293,31 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
           <div class="progress-bar-fill" style="width:${pct}%"></div>
         </div>
         <span class="badge ${statusBadge[p.status] || 'badge-gray'}">${statusLabel[p.status] || p.status}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent activity feed
+  const { data: activity } = await supabase
+    .from('activity_log')
+    .select('*')
+    .eq('client_id', uid)
+    .order('created_at', { ascending: false })
+    .limit(8);
+  if (activity?.length) {
+    const entityIcon = { project:'🚀', message:'💬', file:'📎', schedule:'📅', invoice:'🧾' };
+    document.getElementById('activityCard').style.display = '';
+    document.getElementById('activityFeed').innerHTML = activity.map(a => {
+      const icon  = entityIcon[a.entity_type] || '•';
+      const actor = a.actor_role === 'admin' ? 'ON-Q25' : 'You';
+      const time  = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      return `<div style="display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
+        <span style="flex-shrink:0;">${icon}</span>
+        <div style="flex:1;font-size:0.83rem;color:var(--off-white);">
+          <span style="color:var(--gray-lt);font-weight:600;">${actor}</span> ${a.action}
+          ${a.entity_name ? `<span style="color:var(--gray);"> — ${a.entity_name}</span>` : ''}
+        </div>
+        <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;">${time}</div>
       </div>`;
     }).join('');
   }

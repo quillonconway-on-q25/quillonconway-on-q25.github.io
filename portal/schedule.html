@@ -48,18 +48,43 @@
   </aside>
 
   <main class="portal-main">
-    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <div><h1>Schedule</h1><p>Your upcoming meetings, deadlines, and milestones.</p></div>
-      <button class="btn btn-primary" onclick="openModal()">+ Add Event</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <div class="view-toggle">
+          <button id="btnList" class="view-toggle-btn active" onclick="switchView('list')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            List
+          </button>
+          <button id="btnCal" class="view-toggle-btn" onclick="switchView('calendar')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Calendar
+          </button>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">+ Add Event</button>
+      </div>
     </div>
 
-    <div class="card">
-      <div id="scheduleList"></div>
-      <div id="emptySchedule" class="empty-state" style="display:none;">
-        <div class="empty-state-icon">📅</div>
-        <h3>No events yet</h3>
-        <p>Add your first meeting or deadline above.</p>
+    <!-- LIST VIEW -->
+    <div id="listView">
+      <div class="card">
+        <div id="scheduleList"></div>
+        <div id="emptySchedule" class="empty-state" style="display:none;">
+          <div class="empty-state-icon">📅</div>
+          <h3>No events yet</h3>
+          <p>Add your first meeting or deadline above.</p>
+        </div>
       </div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="calendarView" style="display:none;">
+      <div class="cal-nav">
+        <button class="btn btn-outline btn-sm" onclick="prevMonth()">‹ Prev</button>
+        <span id="calMonthLabel" style="font-weight:700;font-size:1rem;"></span>
+        <button class="btn btn-outline btn-sm" onclick="nextMonth()">Next ›</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
     </div>
   </main>
 </div>
@@ -107,6 +132,66 @@
 <script src="auth.js"></script>
 <script>
 let currentUid = null;
+let currentView = 'list';
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let allEvents = [];
+
+function switchView(view) {
+  currentView = view;
+  document.getElementById('listView').style.display     = view === 'list'     ? '' : 'none';
+  document.getElementById('calendarView').style.display = view === 'calendar' ? '' : 'none';
+  document.getElementById('btnList').classList.toggle('active', view === 'list');
+  document.getElementById('btnCal').classList.toggle('active', view === 'calendar');
+  if (view === 'calendar') renderCalendar();
+}
+
+function prevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function nextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function renderCalendar() {
+  const DOW   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const today = new Date();
+  const first = new Date(calYear, calMonth, 1);
+  const days  = new Date(calYear, calMonth + 1, 0).getDate();
+  const start = first.getDay(); // 0=Sun
+
+  document.getElementById('calMonthLabel').textContent =
+    first.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+  let html = DOW.map(d => `<div class="cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < start; i++) html += `<div class="cal-empty"></div>`;
+
+  const pad = n => String(n).padStart(2,'0');
+
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${calYear}-${pad(calMonth+1)}-${pad(d)}`;
+    const evs = allEvents.filter(e => e.scheduled_date?.slice(0,10) === dateStr);
+    const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===d;
+    html += `<div class="cal-day${isToday?' cal-today':''}" onclick="calDayClick('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      ${evs.map(e => {
+        const safeTitle = e.title.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const safeDesc  = (e.description||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        return `<div class="cal-event cal-ev-${e.status}" onclick="event.stopPropagation();openEditModal('${e.id}','${safeTitle}','${e.scheduled_date}','${safeDesc}')" title="${e.title}">${e.title.length>16?e.title.slice(0,16)+'…':e.title}</div>`;
+      }).join('')}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+}
+
+function calDayClick(dateStr) {
+  // Pre-fill the modal date field and open for adding
+  const d = new Date(dateStr + 'T09:00');
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('evId').value    = '';
+  document.getElementById('evTitle').value = '';
+  document.getElementById('evDate').value  = `${dateStr}T09:00`;
+  document.getElementById('evDesc').value  = '';
+  document.getElementById('modalTitle').textContent   = 'Add Event';
+  document.getElementById('modalSaveBtn').textContent = 'Save Event';
+  document.getElementById('modal').style.display = 'flex';
+}
 
 function showToast(msg, type='success') {
   const t = document.getElementById('toast');
@@ -142,6 +227,8 @@ const statusBadge = { upcoming:'badge-blue', completed:'badge-green', cancelled:
 
 async function loadSchedule() {
   const { data } = await supabase.from('schedule_items').select('*').eq('client_id', currentUid).order('scheduled_date');
+  allEvents = data || [];
+  if (currentView === 'calendar') { renderCalendar(); return; }
   const list  = document.getElementById('scheduleList');
   const empty = document.getElementById('emptySchedule');
   if (!data?.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
@@ -226,5 +313,70 @@ document.getElementById('modal').addEventListener('click', e => {
   loadSchedule();
 })();
 </script>
+<style>
+/* View toggle */
+.view-toggle { display:flex; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:3px; gap:3px; }
+.view-toggle-btn { background:none; border:none; color:var(--gray); font-size:0.78rem; font-weight:600; font-family:var(--font); padding:5px 12px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:5px; transition:all 0.15s; }
+.view-toggle-btn:hover  { color:var(--off-white); }
+.view-toggle-btn.active { background:var(--blue); color:#fff; }
+
+/* Calendar nav */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+
+/* Calendar grid */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cal-dow {
+  background: var(--surface2);
+  padding: 8px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gray);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cal-empty { background: var(--surface); min-height: 80px; }
+.cal-day {
+  background: var(--surface);
+  min-height: 80px;
+  padding: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+  position: relative;
+}
+.cal-day:hover { background: var(--surface2); }
+.cal-today { background: rgba(59,110,245,0.08); }
+.cal-today .cal-day-num { color: var(--blue-lt); font-weight: 700; }
+.cal-day-num { font-size: 0.78rem; font-weight: 500; color: var(--gray-lt); margin-bottom: 4px; }
+.cal-event {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 5px;
+  border-radius: 4px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.12s;
+}
+.cal-event:hover { opacity: 0.8; }
+.cal-ev-upcoming   { background: rgba(59,110,245,0.18); color: #93b4ff; }
+.cal-ev-completed  { background: rgba(74,222,128,0.15); color: #4ade80; }
+.cal-ev-cancelled  { background: rgba(107,114,128,0.15); color: var(--gray); text-decoration: line-through; }
+
+@media (max-width: 600px) {
+  .cal-day { min-height: 56px; padding: 4px; }
+  .cal-event { font-size: 0.6rem; padding: 1px 3px; }
+}
+</style>
 </body>
 </html>

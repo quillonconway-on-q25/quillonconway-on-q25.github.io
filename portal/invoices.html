@@ -153,6 +153,14 @@ async function loadInvoices(uid) {
   if (!data?.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
   empty.style.display = 'none';
 
+  // Fetch all line items for these invoices in one query
+  const ids = data.map(i => i.id);
+  const { data: allItems } = await supabase
+    .from('invoice_line_items')
+    .select('*')
+    .in('invoice_id', ids)
+    .order('sort_order');
+
   // Totals
   const totalDue      = data.filter(i => i.status === 'due').reduce((s, i) => s + Number(i.amount), 0);
   const totalOverdue  = data.filter(i => i.status === 'overdue').reduce((s, i) => s + Number(i.amount), 0);
@@ -161,19 +169,41 @@ async function loadInvoices(uid) {
   document.getElementById('statOverdue').textContent = fmt(totalOverdue);
   document.getElementById('statPaid').textContent    = fmt(totalPaid);
 
-  list.innerHTML = data.map(inv => `
+  list.innerHTML = data.map(inv => {
+    const items = (allItems || []).filter(it => it.invoice_id === inv.id);
+    const lineItemsHtml = items.length ? `
+      <div class="inv-items">
+        ${items.map(it => `
+          <div class="inv-item-row">
+            <span class="inv-item-desc">${it.description}</span>
+            <span class="inv-item-meta">${Number(it.quantity) !== 1 ? `${it.quantity} × ` : ''}${fmt(it.unit_price)}</span>
+            <span class="inv-item-amt">${fmt(it.quantity * it.unit_price)}</span>
+          </div>`).join('')}
+        <div class="inv-item-total">
+          <span>Total</span>
+          <span>${fmt(inv.amount)}</span>
+        </div>
+      </div>` : '';
+
+    return `
     <div class="invoice-row">
-      <div class="invoice-left">
-        <div class="invoice-title">${inv.title}</div>
-        ${inv.due_date ? `<div class="invoice-meta">Due ${new Date(inv.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>` : ''}
-        ${inv.notes ? `<div class="invoice-notes">${inv.notes}</div>` : ''}
+      <div class="invoice-left" style="flex:1;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div class="invoice-title">${inv.title}</div>
+            ${inv.due_date ? `<div class="invoice-meta">Due ${new Date(inv.due_date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>` : ''}
+          </div>
+          <div class="invoice-right" style="flex-shrink:0;">
+            <div class="invoice-amount">${fmt(inv.amount)}</div>
+            <span class="badge ${statusBadge[inv.status] || 'badge-gray'}">${statusLabel[inv.status] || inv.status}</span>
+            ${inv.pdf_url ? `<a href="${inv.pdf_url}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:8px;">View PDF</a>` : ''}
+          </div>
+        </div>
+        ${lineItemsHtml}
+        ${inv.notes ? `<div class="invoice-notes" style="margin-top:8px;">${inv.notes}</div>` : ''}
       </div>
-      <div class="invoice-right">
-        <div class="invoice-amount">${fmt(inv.amount)}</div>
-        <span class="badge ${statusBadge[inv.status] || 'badge-gray'}">${statusLabel[inv.status] || inv.status}</span>
-        ${inv.pdf_url ? `<a href="${inv.pdf_url}" target="_blank" class="btn btn-outline btn-sm" style="margin-top:8px;">View PDF</a>` : ''}
-      </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 (async () => {
@@ -207,6 +237,23 @@ async function loadInvoices(uid) {
   align-items: flex-end; gap: 6px; flex-shrink: 0;
 }
 .invoice-amount { font-size: 1.05rem; font-weight: 700; color: var(--white); }
+.inv-items { margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.inv-item-row {
+  display: grid; grid-template-columns: 1fr auto auto;
+  gap: 16px; padding: 7px 12px;
+  font-size: 0.8rem; color: var(--gray-lt);
+  border-bottom: 1px solid var(--border);
+}
+.inv-item-row:first-child { background: var(--surface2); }
+.inv-item-desc { color: var(--off-white); }
+.inv-item-meta { color: var(--gray); white-space: nowrap; }
+.inv-item-amt  { color: var(--white); font-weight: 600; text-align: right; white-space: nowrap; }
+.inv-item-total {
+  display: flex; justify-content: space-between;
+  padding: 8px 12px; font-size: 0.85rem;
+  font-weight: 700; color: var(--white);
+  background: var(--surface2);
+}
 .badge-red { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
 </style>
 </body>

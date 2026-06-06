@@ -214,7 +214,9 @@ async function loadFiles() {
 
 // ── Approval actions ──
 async function approveFile(id) {
+  const { data: fAp } = await supabase.from('files').select('filename').eq('id',id).single();
   await supabase.from('files').update({ approval_status: 'approved', approval_note: null }).eq('id', id);
+  logActivity(currentUid, 'client', 'Approved file', 'file', fAp?.filename);
   showToast('File approved');
   loadFiles();
 }
@@ -230,7 +232,9 @@ function closeChangesModal() {
 async function submitChanges() {
   const id   = document.getElementById('changesFileId').value;
   const note = document.getElementById('changesNote').value.trim();
+  const { data: fCh } = await supabase.from('files').select('filename').eq('id',id).single();
   await supabase.from('files').update({ approval_status: 'changes_requested', approval_note: note || null }).eq('id', id);
+  logActivity(currentUid, 'client', 'Requested changes', 'file', fCh?.filename);
   closeChangesModal();
   showToast('Feedback sent to ON-Q25');
   loadFiles();

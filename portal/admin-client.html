@@ -76,6 +76,7 @@
       <button class="admin-tab" onclick="switchTab('schedule')">Schedule</button>
       <button class="admin-tab" onclick="switchTab('files')">Files</button>
       <button class="admin-tab" onclick="switchTab('invoices')">Invoices</button>
+      <button class="admin-tab" onclick="switchTab('activity')">Activity</button>
     </div>
 
     <!-- PROJECTS TAB -->
@@ -143,6 +144,17 @@
         </div>
       </div>
     </div>
+
+    <!-- ACTIVITY TAB -->
+    <div id="tab-activity" class="tab-panel" style="display:none;">
+      <div id="activityFeed" class="card">
+        <div class="empty-state" style="padding:32px;">
+          <div class="empty-state-icon">📋</div>
+          <h3>No activity yet</h3>
+          <p>Actions taken on this account will appear here.</p>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -203,35 +215,55 @@
 
 <!-- ADD INVOICE MODAL -->
 <div class="modal-overlay" id="invoiceModal">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:560px;">
     <h2>Add Invoice</h2>
     <div class="form-group">
       <label>Title *</label>
       <input class="form-input" id="invTitle" placeholder="e.g. Brand Identity Package — June" />
     </div>
-    <div class="form-group">
-      <label>Amount ($) *</label>
-      <input class="form-input" type="number" id="invAmount" placeholder="0.00" min="0" step="0.01" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Status</label>
+        <select class="form-select" id="invStatus">
+          <option value="due">Due</option>
+          <option value="overdue">Overdue</option>
+          <option value="paid">Paid</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input class="form-input" type="date" id="invDueDate" />
+      </div>
     </div>
+
+    <!-- LINE ITEMS -->
     <div class="form-group">
-      <label>Status</label>
-      <select class="form-select" id="invStatus">
-        <option value="due">Due</option>
-        <option value="overdue">Overdue</option>
-        <option value="paid">Paid</option>
-      </select>
+      <label>Line Items *</label>
+      <table style="width:100%;border-collapse:collapse;font-size:0.82rem;" id="lineItemsTable">
+        <thead>
+          <tr style="color:var(--gray);text-align:left;">
+            <th style="padding:4px 6px;font-weight:600;">Description</th>
+            <th style="padding:4px 6px;font-weight:600;width:52px;text-align:center;">Qty</th>
+            <th style="padding:4px 6px;font-weight:600;width:90px;text-align:right;">Unit Price</th>
+            <th style="padding:4px 6px;font-weight:600;width:90px;text-align:right;">Amount</th>
+            <th style="width:28px;"></th>
+          </tr>
+        </thead>
+        <tbody id="lineItemsBody"></tbody>
+      </table>
+      <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="addLineItem()">+ Add Line Item</button>
+      <div style="display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <div style="font-size:0.95rem;font-weight:700;">Total: <span id="invTotal">$0.00</span></div>
+      </div>
     </div>
-    <div class="form-group">
-      <label>Due Date</label>
-      <input class="form-input" type="date" id="invDueDate" />
-    </div>
+
     <div class="form-group">
       <label>PDF Link</label>
       <input class="form-input" type="url" id="invPdfUrl" placeholder="https://… (optional)" />
     </div>
     <div class="form-group">
       <label>Notes</label>
-      <textarea class="form-textarea" id="invNotes" placeholder="Optional notes for the client…" style="min-height:70px;"></textarea>
+      <textarea class="form-textarea" id="invNotes" placeholder="Optional notes for the client…" style="min-height:60px;"></textarea>
     </div>
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
       <button class="btn btn-outline" onclick="closeModal('invoiceModal')">Cancel</button>
@@ -281,6 +313,7 @@ function switchTab(tab) {
   if (tab === 'files')     loadFiles();
   if (tab === 'projects')  loadProjects();
   if (tab === 'invoices')  loadInvoices();
+  if (tab === 'activity')  loadActivity();
 }
 
 // ── PROJECTS ─────────────────────────────────────────────────────────────────
@@ -346,6 +379,7 @@ async function addProject() {
   await supabase.from('projects').insert({ client_id: clientId, name, description: desc||null, status, due_date: dueDate });
   closeModal('projectModal');
   ['projName','projDesc','projDueDate'].forEach(id => document.getElementById(id).value = '');
+  logActivity(clientId, 'admin', 'Added project', 'project', name);
   showToast('Project added');
   loadProjects();
 }
@@ -353,7 +387,9 @@ async function addProject() {
 async function updateProjectStatus(id, status) {
   const update = { status, updated_at: new Date().toISOString() };
   if (status === 'complete') update.progress = 100;
+  const { data: pData } = await supabase.from('projects').select('name').eq('id',id).single();
   await supabase.from('projects').update(update).eq('id', id);
+  logActivity(clientId, 'admin', `Status → ${statusLabel[status]}`, 'project', pData?.name);
   showToast('Status updated');
   loadProjects();
 }
@@ -365,7 +401,9 @@ async function updateProjectProgress(id, value) {
 
 async function deleteProject(id) {
   if (!confirm('Delete this project?')) return;
+  const { data: dpData } = await supabase.from('projects').select('name').eq('id',id).single();
   await supabase.from('projects').delete().eq('id', id);
+  logActivity(clientId, 'admin', 'Deleted project', 'project', dpData?.name);
   showToast('Project deleted');
   loadProjects();
 }
@@ -395,6 +433,7 @@ async function sendAdminMessage() {
   input.value = '';
   const { data: { session } } = await supabase.auth.getSession();
   await supabase.from('messages').insert({ client_id: clientId, content, author_id: session.user.id, is_from_admin: true });
+  logActivity(clientId, 'admin', 'Sent a message', 'message', null);
   loadMessages();
 
   // Email notification (non-blocking)
@@ -445,6 +484,7 @@ async function addEvent() {
   const desc  = document.getElementById('evDesc').value.trim();
   if (!title || !date) return;
   await supabase.from('schedule_items').insert({ client_id: clientId, title, scheduled_date: date, description: desc||null, status:'upcoming' });
+  logActivity(clientId, 'admin', 'Added event', 'schedule', title);
   closeModal('scheduleModal');
   document.getElementById('evTitle').value = '';
   document.getElementById('evDate').value  = '';
@@ -533,6 +573,7 @@ async function handleAdminUpload(fileList) {
     });
     bar.style.width = '100%'; pct.textContent = '100%';
     setTimeout(() => prog.classList.remove('visible'), 500);
+    logActivity(clientId, 'admin', 'Uploaded deliverable', 'file', file.name);
     showToast(`${file.name} sent to client`);
   }
   loadFiles();
@@ -582,25 +623,75 @@ async function loadInvoices() {
     </div>`).join('');
 }
 
+function addLineItem() {
+  const tbody = document.getElementById('lineItemsBody');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td style="padding:3px 4px;"><input class="form-input li-desc" placeholder="Description" style="padding:5px 8px;font-size:0.82rem;" oninput="recalcTotal()" /></td>
+    <td style="padding:3px 4px;"><input class="form-input li-qty"  type="number" value="1" min="0.01" step="any" style="padding:5px 8px;font-size:0.82rem;text-align:center;" oninput="recalcTotal()" /></td>
+    <td style="padding:3px 4px;"><input class="form-input li-price" type="number" placeholder="0.00" min="0" step="0.01" style="padding:5px 8px;font-size:0.82rem;text-align:right;" oninput="recalcTotal()" /></td>
+    <td style="padding:3px 4px;text-align:right;color:var(--white);font-size:0.82rem;" class="li-sub">$0.00</td>
+    <td style="padding:3px 4px;text-align:center;"><button type="button" onclick="this.closest('tr').remove();recalcTotal();" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:1rem;padding:0 4px;">✕</button></td>
+  `;
+  tbody.appendChild(row);
+  row.querySelector('.li-desc').focus();
+}
+
+function recalcTotal() {
+  let total = 0;
+  document.querySelectorAll('#lineItemsBody tr').forEach(row => {
+    const qty   = parseFloat(row.querySelector('.li-qty')?.value)   || 0;
+    const price = parseFloat(row.querySelector('.li-price')?.value) || 0;
+    const sub   = qty * price;
+    row.querySelector('.li-sub').textContent = '$' + sub.toFixed(2);
+    total += sub;
+  });
+  document.getElementById('invTotal').textContent = '$' + total.toFixed(2);
+}
+
 async function addInvoice() {
   const title   = document.getElementById('invTitle').value.trim();
-  const amount  = parseFloat(document.getElementById('invAmount').value);
   const status  = document.getElementById('invStatus').value;
   const dueDate = document.getElementById('invDueDate').value || null;
   const pdfUrl  = document.getElementById('invPdfUrl').value.trim() || null;
   const notes   = document.getElementById('invNotes').value.trim() || null;
-  if (!title || isNaN(amount)) { showToast('Title and amount are required', 'error'); return; }
-  const { error } = await supabase.from('invoices').insert({ client_id: clientId, title, amount, status, due_date: dueDate, pdf_url: pdfUrl, notes });
+
+  // Collect line items
+  const items = [];
+  let total = 0;
+  document.querySelectorAll('#lineItemsBody tr').forEach((row, i) => {
+    const desc  = row.querySelector('.li-desc')?.value.trim();
+    const qty   = parseFloat(row.querySelector('.li-qty')?.value)   || 0;
+    const price = parseFloat(row.querySelector('.li-price')?.value) || 0;
+    if (desc && price > 0) { items.push({ description: desc, quantity: qty, unit_price: price, sort_order: i }); total += qty * price; }
+  });
+
+  if (!title) { showToast('Title is required', 'error'); return; }
+  if (!items.length) { showToast('Add at least one line item', 'error'); return; }
+
+  const { data: inv, error } = await supabase.from('invoices')
+    .insert({ client_id: clientId, title, amount: total, status, due_date: dueDate, pdf_url: pdfUrl, notes })
+    .select('id').single();
   if (error) { showToast(error.message, 'error'); return; }
+
+  // Insert line items
+  await supabase.from('invoice_line_items').insert(items.map(it => ({ ...it, invoice_id: inv.id })));
+
   closeModal('invoiceModal');
-  ['invTitle','invAmount','invDueDate','invPdfUrl','invNotes'].forEach(id => document.getElementById(id).value = '');
+  ['invTitle','invDueDate','invPdfUrl','invNotes'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('invStatus').value = 'due';
+  document.getElementById('lineItemsBody').innerHTML = '';
+  recalcTotal();
+  logActivity(clientId, 'admin', 'Created invoice', 'invoice', title);
   showToast('Invoice added');
   loadInvoices();
 }
 
 async function updateInvoiceStatus(id, status) {
+  const { data: invData } = await supabase.from('invoices').select('title').eq('id',id).single();
   await supabase.from('invoices').update({ status }).eq('id', id);
+  const statusMap = { due: 'Due', overdue: 'Overdue', paid: 'Paid' };
+  logActivity(clientId, 'admin', `Invoice marked ${statusMap[status]||status}`, 'invoice', invData?.title);
   showToast('Status updated');
 }
 
@@ -609,6 +700,39 @@ async function deleteInvoice(id) {
   await supabase.from('invoices').delete().eq('id', id);
   showToast('Invoice deleted');
   loadInvoices();
+}
+
+// ── ACTIVITY LOG ─────────────────────────────────────────────────────────────
+const actorIcon  = { admin: '🔧', client: '👤' };
+const entityIcon = { project:'🚀', message:'💬', file:'📎', schedule:'📅', invoice:'🧾' };
+
+async function loadActivity() {
+  const { data } = await supabase
+    .from('activity_log')
+    .select('*')
+    .eq('client_id', clientId)
+    .order('created_at', { ascending: false })
+    .limit(60);
+
+  const feed = document.getElementById('activityFeed');
+  if (!data?.length) {
+    feed.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">📋</div><h3>No activity yet</h3><p>Actions taken on this account will appear here.</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = data.map(a => {
+    const icon  = entityIcon[a.entity_type] || '•';
+    const actor = a.actor_role === 'admin' ? '<span style="color:var(--blue-lt);font-weight:600;">You</span>' : '<span style="color:var(--gray-lt);font-weight:600;">Client</span>';
+    const name  = a.entity_name ? `<span style="color:var(--gray);"> — ${a.entity_name}</span>` : '';
+    const time  = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    return `<div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:0.9rem;flex-shrink:0;">${icon}</span>
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:0.85rem;color:var(--white);">${actor} ${a.action}</span>${name}
+      </div>
+      <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;">${time}</div>
+    </div>`;
+  }).join('').replace(/<div[^>]*>.*<\/div>(?=\s*$)/, m => m.replace('border-bottom:1px solid var(--border)', 'border-bottom:none'));
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────

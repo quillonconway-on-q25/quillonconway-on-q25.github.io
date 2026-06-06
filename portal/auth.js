@@ -66,6 +66,14 @@ function cleanName(raw) {
   return raw;
 }
 
+// Log an activity event — fire-and-forget, never blocks the UI
+function logActivity(clientId, actorRole, action, entityType, entityName) {
+  supabase.from('activity_log').insert({
+    client_id: clientId, actor_role: actorRole,
+    action, entity_type: entityType || null, entity_name: entityName || null
+  }).catch(() => {}); // silent fail — logging should never break the app
+}
+
 // Show count of client conversations waiting for an admin reply
 async function loadAdminInboxBadge() {
   // Fetch latest message per client — count those from clients (not admin)
