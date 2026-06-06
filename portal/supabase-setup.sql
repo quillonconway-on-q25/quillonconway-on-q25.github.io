@@ -74,7 +74,20 @@ CREATE TABLE IF NOT EXISTS messages (
 --   UPDATE messages SET is_read = true WHERE created_at < now(); -- mark old messages read
 -- ────────────────────────────────────────────────────────────────────────────────
 
--- 5. PROJECTS
+-- 5. INVOICES
+CREATE TABLE IF NOT EXISTS invoices (
+  id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  client_id   uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  title       text NOT NULL,
+  amount      numeric(10,2) NOT NULL,
+  status      text DEFAULT 'due' CHECK (status IN ('due','overdue','paid')),
+  due_date    date,
+  pdf_url     text,
+  notes       text,
+  created_at  timestamptz DEFAULT now()
+);
+
+-- 6. PROJECTS
 CREATE TABLE IF NOT EXISTS projects (
   id          uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   client_id   uuid REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -95,12 +108,15 @@ ALTER TABLE schedule_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects       ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+
 -- Clients see/modify only their own rows
 CREATE POLICY "own_profile"   ON profiles       FOR ALL USING (id = auth.uid());
 CREATE POLICY "own_files"     ON files          FOR ALL USING (client_id = auth.uid());
 CREATE POLICY "own_schedule"  ON schedule_items FOR ALL USING (client_id = auth.uid());
 CREATE POLICY "own_messages"  ON messages       FOR ALL USING (client_id = auth.uid());
 CREATE POLICY "own_projects"  ON projects       FOR ALL USING (client_id = auth.uid());
+CREATE POLICY "own_invoices"  ON invoices       FOR ALL USING (client_id = auth.uid());
 
 -- Admins see everything (set is_admin=true in profiles for your accounts)
 CREATE POLICY "admin_profiles"  ON profiles       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
@@ -108,6 +124,14 @@ CREATE POLICY "admin_files"     ON files          FOR ALL USING ((SELECT is_admi
 CREATE POLICY "admin_schedule"  ON schedule_items FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
 CREATE POLICY "admin_messages"  ON messages       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
 CREATE POLICY "admin_projects"  ON projects       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
+CREATE POLICY "admin_invoices"  ON invoices       FOR ALL USING ((SELECT is_admin FROM profiles WHERE id = auth.uid()));
+
+-- ── Migration: add invoices table to existing project ─────────────────────────
+-- Run this if tables already exist:
+--   CREATE TABLE IF NOT EXISTS invoices ( ... ) -- see above
+--   ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
+--   CREATE POLICY ... -- see above
+-- ────────────────────────────────────────────────────────────────────────────────
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- STORAGE BUCKET  (also do this in Dashboard → Storage → New bucket)
