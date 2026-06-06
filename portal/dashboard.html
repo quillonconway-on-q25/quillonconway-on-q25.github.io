@@ -58,7 +58,7 @@
       </a>
     </div>
     <div class="sidebar-back">
-      <a href="/" class="sidebar-back-link">
+      <a href="https://on-q25.com" class="sidebar-back-link">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         Back to ON-Q25.com
       </a>
@@ -294,7 +294,10 @@ async function loadDashboardData(uid) {
       </div>`;
     }).join('');
   } else {
-    document.getElementById('projectsPreview').innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">🚀</div><p>No active projects</p></div>`;
+    const { count: completedCount } = await supabase.from('projects').select('id', { count: 'exact', head: true }).eq('client_id', uid).eq('status', 'complete');
+    document.getElementById('projectsPreview').innerHTML = completedCount > 0
+      ? `<div class="empty-state" style="padding:28px;"><div class="empty-state-icon">✅</div><p style="margin-bottom:8px;">No active projects right now.</p><a href="projects.html" style="font-size:0.8rem;color:var(--blue-lt);">${completedCount} completed project${completedCount !== 1 ? 's' : ''} →</a></div>`
+      : `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">🚀</div><p>No active projects</p></div>`;
   }
 
   // Recent activity feed
