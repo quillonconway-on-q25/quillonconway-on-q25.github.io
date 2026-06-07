@@ -116,10 +116,6 @@ async function loadMessages() {
   }
 }
 
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
 async function sendMessage() {
   const input   = document.getElementById('msgInput');
   const content = input.value.trim();

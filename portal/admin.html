@@ -356,6 +356,12 @@ async function updateClient() {
 
 async function deleteClient(id, name) {
   if (!confirm(`Remove ${name} and all their data? This cannot be undone.`)) return;
+  // Fetch invoice IDs first so we can delete line items
+  const { data: clientInvoices } = await supabase.from('invoices').select('id').eq('client_id', id);
+  if (clientInvoices?.length) {
+    const invoiceIds = clientInvoices.map(i => i.id);
+    await supabase.from('invoice_line_items').delete().in('invoice_id', invoiceIds);
+  }
   await Promise.all([
     supabase.from('messages').delete().eq('client_id', id),
     supabase.from('projects').delete().eq('client_id', id),

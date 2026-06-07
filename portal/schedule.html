@@ -270,11 +270,11 @@ async function loadSchedule() {
       </div>
       <div class="schedule-details" style="flex:1;">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div class="schedule-title">${e.title}</div>
+          <div class="schedule-title">${escHtml(e.title)}</div>
           <span class="badge ${statusBadge[e.status]||'badge-gray'}">${e.status}</span>
         </div>
         <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
-        ${e.description ? `<div class="schedule-desc">${e.description}</div>` : ''}
+        ${e.description ? `<div class="schedule-desc">${escHtml(e.description)}</div>` : ''}
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         ${e.status==='upcoming' ? `

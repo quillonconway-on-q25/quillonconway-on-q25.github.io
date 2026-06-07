@@ -530,8 +530,8 @@ async function sendAdminMessage() {
 }
 
 function handleMsgKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAdminMessage(); }
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendAdminMessage(); }
+  else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAdminMessage(); }
 }
 
 // ── SCHEDULE ─────────────────────────────────────────────────────────────────

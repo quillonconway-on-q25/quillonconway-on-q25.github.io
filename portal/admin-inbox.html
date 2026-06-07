@@ -132,10 +132,6 @@ function showToast(msg, type='success') {
   setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-function escHtml(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-}
-
 async function loadInbox() {
   const { data: clients } = await supabase
     .from('profiles').select('*').eq('is_admin', false).order('created_at', { ascending: false });
@@ -252,7 +248,7 @@ async function renderMessages(clientId) {
   thread.innerHTML = data.map(m => `
     <div class="message-bubble ${m.is_from_admin ? 'from-client' : 'from-admin'}">
       <div class="bubble-content">${escHtml(m.content)}</div>
-      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${formatDate(m.created_at)} ${formatTime(m.created_at)}</div>
+      <div class="bubble-meta" title="${formatDate(m.created_at)} ${formatTime(m.created_at)}">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${timeAgo(m.created_at)}</div>
     </div>`).join('');
   thread.scrollTop = thread.scrollHeight;
 }
@@ -278,8 +274,8 @@ async function sendReply() {
 }
 
 function handleReplyKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendReply(); }
+  else if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
 }
 
 function filterInbox(query) {
