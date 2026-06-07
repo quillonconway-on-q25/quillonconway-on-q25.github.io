@@ -693,7 +693,7 @@ mark { background: rgba(102,144,255,0.25); color: var(--blue-lt); border-radius:
   border-top: 1px solid var(--border);
   padding: 6px 0 env(safe-area-inset-bottom, 8px);
   z-index: 100;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }

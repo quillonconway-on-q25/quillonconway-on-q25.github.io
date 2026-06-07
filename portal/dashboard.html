@@ -166,6 +166,10 @@
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     Projects
   </a>
+  <a href="invoices.html" class="pmn-item">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    Invoices
+  </a>
 </nav>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -222,7 +226,7 @@ async function loadDashboardData(uid) {
   document.getElementById('statProjects').textContent = projectCount;
 
   // Show getting started banner for brand new clients (only once per page load)
-  if (!_bannerShown && fileCount === 0 && eventCount === 0 && projectCount === 0) {
+  if (!_bannerShown && fileCount === 0 && eventCount === 0 && projectCount === 0 && unreadCount === 0) {
     _bannerShown = true;
     const banner = document.createElement('div');
     banner.style.cssText = 'background:rgba(59,110,245,0.08);border:1px solid rgba(59,110,245,0.2);border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;';

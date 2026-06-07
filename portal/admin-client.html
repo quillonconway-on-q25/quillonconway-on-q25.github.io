@@ -507,12 +507,10 @@ async function loadMessages() {
   thread.innerHTML = data.map(m => `
     <div class="message-bubble ${m.is_from_admin ? 'from-client' : 'from-admin'}">
       <div class="bubble-content">${escHtml(m.content)}</div>
-      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${formatDate(m.created_at)}</div>
+      <div class="bubble-meta" title="${formatDate(m.created_at)} ${formatTime(m.created_at)}">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${timeAgo(m.created_at)}</div>
     </div>`).join('');
   thread.scrollTop = thread.scrollHeight;
 }
-
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
 
 async function sendAdminMessage() {
   const input = document.getElementById('msgInput');
@@ -523,6 +521,7 @@ async function sendAdminMessage() {
   await supabase.from('messages').insert({ client_id: clientId, content, author_id: session.user.id, is_from_admin: true });
   logActivity(clientId, 'admin', 'Sent a message', 'message', null);
   loadMessages();
+  loadAdminInboxBadge();
 
   // Email notification (non-blocking)
   supabase.functions.invoke('notify-message', {
@@ -810,10 +809,12 @@ async function updateInvoiceStatus(id, status) {
   const statusMap = { due: 'Due', overdue: 'Overdue', paid: 'Paid' };
   logActivity(clientId, 'admin', `Invoice marked ${statusMap[status]||status}`, 'invoice', invData?.title);
   showToast('Status updated');
+  loadInvoices();
 }
 
 async function deleteInvoice(id) {
   if (!confirm('Delete this invoice?')) return;
+  await supabase.from('invoice_line_items').delete().eq('invoice_id', id);
   await supabase.from('invoices').delete().eq('id', id);
   showToast('Invoice deleted');
   loadInvoices();

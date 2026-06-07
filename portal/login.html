@@ -123,8 +123,6 @@
         const signIn = supabase.auth.signInWithPassword({ email, password });
         const { data, error } = await Promise.race([signIn, timeout]);
 
-        console.log('Auth response:', { data, error });
-
         if (error) {
           err.textContent = error.message;
           err.style.display = 'block';

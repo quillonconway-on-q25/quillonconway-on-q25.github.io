@@ -439,7 +439,7 @@ async function inviteClient() {
 async function reInviteClient(email, name, biz) {
   // Send a password reset so they can get back in
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://on-q25.com/portal/login'
+    redirectTo: 'https://on-q25.com/portal/reset-password.html'
   });
   closeInviteModal();
   if (error) { showToast('Could not send reset email: ' + error.message, 'error'); return; }
