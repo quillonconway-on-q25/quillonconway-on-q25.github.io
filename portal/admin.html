@@ -258,8 +258,8 @@ async function loadClients() {
         <div class="client-card-header">
           <div class="client-avatar">${initials}</div>
           <div class="client-info">
-            <div class="client-name">${c.full_name || 'Unnamed Client'}</div>
-            <div class="client-biz">${c.business_name || ''}</div>
+            <div class="client-name">${highlight(c.full_name || 'Unnamed Client', _searchQuery)}</div>
+            <div class="client-biz">${highlight(c.business_name || '', _searchQuery)}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
             <span class="badge badge-green">Active</span>
@@ -301,9 +301,17 @@ async function loadClients() {
 }
 
 let allClientCards = [];
+let _searchQuery = '';
+
+function highlight(text, query) {
+  if (!query) return text;
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+}
 
 function filterClients(query) {
-  const q   = (query || '').toLowerCase().trim();
+  _searchQuery = query || '';
+  const q   = _searchQuery.toLowerCase().trim();
   const sort = document.getElementById('clientSort')?.value || 'name';
   let filtered = allClientCards.filter(({ client: c }) =>
     !q || (c.full_name||'').toLowerCase().includes(q) || (c.business_name||'').toLowerCase().includes(q)

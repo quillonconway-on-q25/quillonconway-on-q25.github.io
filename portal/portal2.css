@@ -502,6 +502,14 @@ td.td-main { color: var(--white); font-weight: 500; }
 .schedule-desc  { font-size: 0.775rem; color: var(--gray); margin-top: 3px; }
 .schedule-time  { font-size: 0.75rem; color: var(--blue-lt); margin-top: 2px; }
 
+/* Cancelled event styling */
+.schedule-item.is-cancelled { opacity: 0.5; }
+.schedule-item.is-cancelled .schedule-title { text-decoration: line-through; color: var(--gray); }
+.schedule-item.is-cancelled .schedule-date-badge { opacity: 0.5; }
+
+/* Search highlight */
+mark { background: rgba(102,144,255,0.25); color: var(--blue-lt); border-radius: 2px; padding: 0 1px; font-weight: 700; }
+
 /* ===== PROJECT CARDS ===== */
 .project-row {
   display: flex; align-items: center; justify-content: space-between;

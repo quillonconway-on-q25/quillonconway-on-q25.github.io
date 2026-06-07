@@ -675,7 +675,8 @@ async function addInvoice() {
     const desc  = row.querySelector('.li-desc')?.value.trim();
     const qty   = parseFloat(row.querySelector('.li-qty')?.value)   || 0;
     const price = parseFloat(row.querySelector('.li-price')?.value) || 0;
-    if (desc && price > 0) { items.push({ description: desc, quantity: qty, unit_price: price, sort_order: i }); total += qty * price; }
+    if (desc && qty > 0 && price >= 0) { items.push({ description: desc, quantity: qty, unit_price: price, sort_order: i }); total += qty * price; }
+    else if (desc && (qty <= 0 || price < 0)) { showToast('Line items must have qty > 0 and price ≥ 0', 'error'); }
   });
 
   if (!title) { showToast('Title is required', 'error'); return; }

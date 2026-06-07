@@ -185,6 +185,7 @@ const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', r
   setNavUser(profile, session);
   if (profile?.is_admin) document.getElementById('adminPanelLink').style.display = 'block';
   loadUnreadBadge(uid);
+  loadDeliverableBadge(uid);
   const mInit = document.getElementById('mobileInitial');
   if (mInit) mInit.textContent = (profile?.full_name || session.user.email || '?').charAt(0).toUpperCase();
 

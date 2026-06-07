@@ -278,6 +278,7 @@ async function sendReply() {
 
 function handleReplyKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendReply(); }
 }
 
 function filterInbox(query) {
@@ -296,6 +297,12 @@ function filterInbox(query) {
   setNavUser(profile, session);
   loadAdminInboxBadge();
   loadInbox();
+
+  // Refresh badge in real-time as clients send messages
+  supabase.channel('inbox-badge-live')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+      () => loadAdminInboxBadge())
+    .subscribe();
 })();
 </script>
 

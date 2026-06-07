@@ -168,6 +168,7 @@ function showToast(msg, type = 'success') {
   const profile = await getProfile(uid);
   setNavUser(profile, session);
   loadUnreadBadge(uid);
+  loadDeliverableBadge(uid);
 
   const mInit = document.getElementById('mobileInitial');
   if (mInit) mInit.textContent = (profile?.full_name || session.user.email || '?').charAt(0).toUpperCase();

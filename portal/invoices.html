@@ -71,9 +71,12 @@
   </aside>
 
   <main class="portal-main">
-    <div class="page-header">
-      <h1>Invoices</h1>
-      <p>Your billing history with ON-Q25.</p>
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div><h1>Invoices</h1><p>Your billing history with ON-Q25.</p></div>
+      <button class="btn btn-outline" id="exportBtn" onclick="exportCSV()" style="display:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
     </div>
 
     <!-- SUMMARY CARDS -->
@@ -152,7 +155,12 @@ async function loadInvoices(uid) {
   const empty = document.getElementById('emptyInvoices');
 
   if (!data?.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  _invoiceData  = data;
   empty.style.display = 'none';
+
+  // Show export button now that there's data
+  const exportBtn = document.getElementById('exportBtn');
+  if (exportBtn) exportBtn.style.display = '';
 
   // Fetch all line items for these invoices in one query
   const ids = data.map(i => i.id);
@@ -170,6 +178,7 @@ async function loadInvoices(uid) {
   document.getElementById('statOverdue').textContent = fmt(totalOverdue);
   document.getElementById('statPaid').textContent    = fmt(totalPaid);
 
+  _lineItemData = allItems || [];
   const today = new Date(); today.setHours(0,0,0,0);
   list.innerHTML = data.map(inv => {
     // Visually flag as overdue if due date has passed but status hasn't been updated
@@ -211,12 +220,45 @@ async function loadInvoices(uid) {
   }).join('');
 }
 
+let _invoiceData = [];
+let _lineItemData = [];
+
+function exportCSV() {
+  const rows = [['Invoice', 'Status', 'Due Date', 'Item Description', 'Qty', 'Unit Price', 'Amount', 'Total']];
+  _invoiceData.forEach(inv => {
+    const items = _lineItemData.filter(it => it.invoice_id === inv.id);
+    if (items.length) {
+      items.forEach((it, i) => {
+        rows.push([
+          i === 0 ? inv.title : '',
+          i === 0 ? inv.status : '',
+          i === 0 ? (inv.due_date || '') : '',
+          it.description,
+          it.quantity,
+          Number(it.unit_price).toFixed(2),
+          (it.quantity * it.unit_price).toFixed(2),
+          i === 0 ? Number(inv.amount).toFixed(2) : '',
+        ]);
+      });
+    } else {
+      rows.push([inv.title, inv.status, inv.due_date || '', '', '', '', '', Number(inv.amount).toFixed(2)]);
+    }
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), { href: url, download: 'on-q25-invoices.csv' });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
 (async () => {
   const session = await requireAuth(); if (!session) return;
   const uid = session.user.id;
   const profile = await getProfile(uid);
   setNavUser(profile, session);
   loadUnreadBadge(uid);
+  loadDeliverableBadge(uid);
   const mInit = document.getElementById('mobileInitial');
   if (mInit) mInit.textContent = (profile?.full_name || session.user.email || '?').charAt(0).toUpperCase();
   loadInvoices(uid);

@@ -102,6 +102,22 @@ async function loadAdminInboxBadge() {
   }
 }
 
+// Show count of deliverables waiting for client approval on the Files nav link
+async function loadDeliverableBadge(uid) {
+  const { count } = await supabase
+    .from('files')
+    .select('id', { count: 'exact', head: true })
+    .eq('client_id', uid)
+    .eq('uploaded_by_admin', true)
+    .or('approval_status.is.null,approval_status.eq.pending');
+
+  const badge       = document.getElementById('filesBadge');
+  const mobileBadge = document.getElementById('filesBadgeMobile');
+  const show = (count ?? 0) > 0;
+  if (badge)       { badge.textContent = count;       badge.style.display       = show ? 'inline-block' : 'none'; }
+  if (mobileBadge) { mobileBadge.textContent = count; mobileBadge.style.display = show ? 'inline-block' : 'none'; }
+}
+
 // Show unread message count badge on the Messages nav link
 async function loadUnreadBadge(uid) {
   const { count } = await supabase

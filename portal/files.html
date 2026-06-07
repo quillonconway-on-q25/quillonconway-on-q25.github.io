@@ -165,6 +165,9 @@ async function loadFiles() {
   // ── Deliverables section ──
   if (deliverables.length) {
     delivSec.style.display = 'block';
+    // Clear badge — client is now looking at deliverables
+    const fb = document.getElementById('filesBadge'); if (fb) fb.style.display = 'none';
+    const fbm = document.getElementById('filesBadgeMobile'); if (fbm) fbm.style.display = 'none';
     delivGrid.innerHTML = deliverables.map(f => {
       const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(f.storage_path);
       const url   = urlData?.publicUrl;
@@ -307,11 +310,28 @@ const fi = document.getElementById('fileInput');
 dz.addEventListener('click', () => fi.click());
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+const ALLOWED_TYPES = ['image/','video/','application/pdf','application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
+function isAllowedType(file) {
+  return ALLOWED_TYPES.some(t => file.type.startsWith(t));
+}
+
+function uploadFilesValidated(files) {
+  [...files].forEach(f => {
+    if (!isAllowedType(f)) {
+      showToast(`"${f.name}" is not a supported file type`, 'error');
+    } else {
+      uploadFile(f);
+    }
+  });
+}
+
 dz.addEventListener('drop', e => {
   e.preventDefault(); dz.classList.remove('drag-over');
-  [...e.dataTransfer.files].forEach(uploadFile);
+  uploadFilesValidated(e.dataTransfer.files);
 });
-fi.addEventListener('change', () => [...fi.files].forEach(uploadFile));
+fi.addEventListener('change', () => uploadFilesValidated(fi.files));
 
 (async () => {
   const session = await requireAuth(); if (!session) return;
@@ -319,6 +339,7 @@ fi.addEventListener('change', () => [...fi.files].forEach(uploadFile));
   const profile = await getProfile(currentUid);
   setNavUser(profile, session);
   loadUnreadBadge(currentUid);
+  loadDeliverableBadge(currentUid);
   loadFiles();
 })();
 </script>
