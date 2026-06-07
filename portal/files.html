@@ -63,7 +63,10 @@
     </div>
 
     <!-- CLIENT UPLOADS -->
-    <div class="section-title" style="margin-bottom:14px;" id="yourFilesLabel">Your Uploads</div>
+    <div class="section-title" style="margin-bottom:14px;" id="yourFilesLabel">
+      Your Uploads
+      <span id="filesSummary" style="font-size:0.72rem;font-weight:400;color:var(--gray);"></span>
+    </div>
 
     <div class="dropzone" id="dropzone">
       <div class="dropzone-icon">📁</div>
@@ -195,8 +198,10 @@ async function loadFiles() {
   }
 
   // ── Client files section ──
-  if (!clientFiles.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
+  if (!clientFiles.length) { grid.innerHTML = ''; empty.style.display = 'block'; document.getElementById('filesSummary').textContent = ''; return; }
   empty.style.display = 'none';
+  const totalBytes = clientFiles.reduce((s, f) => s + (f.file_size || 0), 0);
+  document.getElementById('filesSummary').textContent = `${clientFiles.length} file${clientFiles.length !== 1 ? 's' : ''} · ${formatBytes(totalBytes)}`;
   grid.innerHTML = clientFiles.map(f => {
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(f.storage_path);
     const url = urlData?.publicUrl;

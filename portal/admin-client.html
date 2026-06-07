@@ -272,6 +272,92 @@
   </div>
 </div>
 
+<!-- EDIT PROJECT MODAL -->
+<div class="modal-overlay" id="editProjectModal">
+  <div class="modal-box">
+    <h2>Edit Project</h2>
+    <input type="hidden" id="editProjId" />
+    <div class="form-group">
+      <label>Project Name *</label>
+      <input class="form-input" id="editProjName" placeholder="e.g. Brand Identity Package" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea class="form-textarea" id="editProjDesc" placeholder="Brief summary…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Due Date</label>
+      <input class="form-input" type="date" id="editProjDueDate" />
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('editProjectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditProject()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT EVENT MODAL -->
+<div class="modal-overlay" id="editEventModal">
+  <div class="modal-box">
+    <h2>Edit Event</h2>
+    <input type="hidden" id="editEvId" />
+    <div class="form-group">
+      <label>Title *</label>
+      <input class="form-input" id="editEvTitle" placeholder="e.g. Brand Review Call" />
+    </div>
+    <div class="form-group">
+      <label>Date &amp; Time *</label>
+      <input class="form-input" type="datetime-local" id="editEvDate" />
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea class="form-textarea" id="editEvDesc" placeholder="Optional notes…" style="min-height:80px;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('editEventModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditEvent()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT INVOICE MODAL -->
+<div class="modal-overlay" id="editInvoiceModal">
+  <div class="modal-box" style="max-width:480px;">
+    <h2>Edit Invoice</h2>
+    <input type="hidden" id="editInvId" />
+    <div class="form-group">
+      <label>Title *</label>
+      <input class="form-input" id="editInvTitle" placeholder="e.g. Brand Identity Package — June" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label>Status</label>
+        <select class="form-select" id="editInvStatus">
+          <option value="due">Due</option>
+          <option value="overdue">Overdue</option>
+          <option value="paid">Paid</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input class="form-input" type="date" id="editInvDueDate" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>PDF Link</label>
+      <input class="form-input" type="url" id="editInvPdfUrl" placeholder="https://… (optional)" />
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea class="form-textarea" id="editInvNotes" placeholder="Optional notes for the client…" style="min-height:60px;"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-outline" onclick="closeModal('editInvoiceModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditInvoice()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 
@@ -348,6 +434,7 @@ async function loadProjects() {
             <option value="review"      ${p.status==='review'?'selected':''}>In Review</option>
             <option value="complete"    ${p.status==='complete'?'selected':''}>Complete</option>
           </select>
+          <button class="btn btn-outline btn-sm" onclick="openEditProjectModal('${p.id}',\`${p.name.replace(/`/g,'\\`')}\`,\`${(p.description||'').replace(/`/g,'\\`')}\`,'${p.due_date||''}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
         </div>
       </div>
@@ -472,7 +559,8 @@ async function loadSchedule() {
         <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
         ${e.description ? `<div class="schedule-desc">${e.description}</div>` : ''}
       </div>
-      <div style="display:flex;gap:6px;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        ${e.status==='upcoming' ? `<button class="btn btn-outline btn-sm" onclick="openEditEventModal('${e.id}',\`${e.title.replace(/`/g,'\\`')}\`,'${e.scheduled_date}',\`${(e.description||'').replace(/`/g,'\\`')}\`)">Edit</button>` : ''}
         ${e.status==='upcoming' ? `<button class="btn btn-outline btn-sm" onclick="markEventDone('${e.id}')">Done</button>` : ''}
         ${e.status==='upcoming' ? `<button class="btn btn-sm" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);" onclick="markEventCancelled('${e.id}')">Cancel</button>` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">Delete</button>
@@ -642,8 +730,9 @@ async function loadInvoices() {
           <option value="overdue"  ${inv.status==='overdue'?'selected':''}>Overdue</option>
           <option value="paid"     ${inv.status==='paid'?'selected':''}>Paid</option>
         </select>
-        <div style="display:flex;gap:6px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
           ${inv.pdf_url ? `<a href="${inv.pdf_url}" target="_blank" class="btn btn-outline btn-sm">PDF</a>` : ''}
+          <button class="btn btn-outline btn-sm" onclick="openEditInvoiceModal('${inv.id}',\`${inv.title.replace(/`/g,'\\`')}\`,'${inv.status}','${inv.due_date||''}',\`${(inv.pdf_url||'').replace(/`/g,'\\`')}\`,\`${(inv.notes||'').replace(/`/g,'\\`')}\`)">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteInvoice('${inv.id}')">Delete</button>
         </div>
       </div>
@@ -764,9 +853,86 @@ async function loadActivity() {
   }).join('').replace(/<div[^>]*>.*<\/div>(?=\s*$)/, m => m.replace('border-bottom:1px solid var(--border)', 'border-bottom:none'));
 }
 
+// ── EDIT PROJECT ─────────────────────────────────────────────────────────────
+function openEditProjectModal(id, name, desc, dueDate) {
+  document.getElementById('editProjId').value      = id;
+  document.getElementById('editProjName').value    = name;
+  document.getElementById('editProjDesc').value    = desc;
+  document.getElementById('editProjDueDate').value = dueDate;
+  openModal('editProjectModal');
+}
+
+async function saveEditProject() {
+  const id      = document.getElementById('editProjId').value;
+  const name    = document.getElementById('editProjName').value.trim();
+  const desc    = document.getElementById('editProjDesc').value.trim();
+  const dueDate = document.getElementById('editProjDueDate').value || null;
+  if (!name) { showToast('Project name is required', 'error'); return; }
+  await supabase.from('projects').update({ name, description: desc || null, due_date: dueDate, updated_at: new Date().toISOString() }).eq('id', id);
+  logActivity(clientId, 'admin', 'Updated project', 'project', name);
+  closeModal('editProjectModal');
+  showToast('Project updated');
+  loadProjects();
+}
+
+// ── EDIT EVENT ────────────────────────────────────────────────────────────────
+function openEditEventModal(id, title, scheduledDate, desc) {
+  document.getElementById('editEvId').value    = id;
+  document.getElementById('editEvTitle').value = title;
+  const local = new Date(scheduledDate);
+  const pad   = n => String(n).padStart(2,'0');
+  document.getElementById('editEvDate').value =
+    `${local.getFullYear()}-${pad(local.getMonth()+1)}-${pad(local.getDate())}T${pad(local.getHours())}:${pad(local.getMinutes())}`;
+  document.getElementById('editEvDesc').value  = desc;
+  openModal('editEventModal');
+}
+
+async function saveEditEvent() {
+  const id    = document.getElementById('editEvId').value;
+  const title = document.getElementById('editEvTitle').value.trim();
+  const date  = document.getElementById('editEvDate').value;
+  const desc  = document.getElementById('editEvDesc').value.trim();
+  if (!title || !date) { showToast('Title and date are required', 'error'); return; }
+  await supabase.from('schedule_items').update({ title, scheduled_date: date, description: desc || null }).eq('id', id);
+  logActivity(clientId, 'admin', 'Updated event', 'schedule', title);
+  closeModal('editEventModal');
+  showToast('Event updated');
+  loadSchedule();
+}
+
+// ── EDIT INVOICE ──────────────────────────────────────────────────────────────
+function openEditInvoiceModal(id, title, status, dueDate, pdfUrl, notes) {
+  document.getElementById('editInvId').value      = id;
+  document.getElementById('editInvTitle').value   = title;
+  document.getElementById('editInvStatus').value  = status;
+  document.getElementById('editInvDueDate').value = dueDate;
+  document.getElementById('editInvPdfUrl').value  = pdfUrl;
+  document.getElementById('editInvNotes').value   = notes;
+  openModal('editInvoiceModal');
+}
+
+async function saveEditInvoice() {
+  const id      = document.getElementById('editInvId').value;
+  const title   = document.getElementById('editInvTitle').value.trim();
+  const status  = document.getElementById('editInvStatus').value;
+  const dueDate = document.getElementById('editInvDueDate').value || null;
+  const pdfUrl  = document.getElementById('editInvPdfUrl').value.trim() || null;
+  const notes   = document.getElementById('editInvNotes').value.trim() || null;
+  if (!title) { showToast('Title is required', 'error'); return; }
+  await supabase.from('invoices').update({ title, status, due_date: dueDate, pdf_url: pdfUrl, notes }).eq('id', id);
+  logActivity(clientId, 'admin', 'Updated invoice', 'invoice', title);
+  closeModal('editInvoiceModal');
+  showToast('Invoice updated');
+  loadInvoices();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+['editProjectModal','editEventModal','editInvoiceModal'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
 });
 
 (async () => {

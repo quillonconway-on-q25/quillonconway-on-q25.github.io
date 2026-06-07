@@ -31,7 +31,7 @@
       <a href="admin-inbox.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Inbox
-        <span class="nav-badge" id="inboxBadgeNav" style="display:none;"></span>
+        <span class="nav-unread" id="inboxBadgeNav" style="display:none;"></span>
       </a>
       <a href="admin-team.html">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
@@ -529,12 +529,6 @@ document.getElementById('editModal').addEventListener('click', e => {
 .client-stat { text-align: center; }
 .client-stat span { display: block; font-size: 1.1rem; font-weight: 800; color: var(--white); }
 .client-stat { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; }
-.nav-badge {
-  margin-left: auto; background: var(--blue);
-  color: var(--white); font-size: 0.6rem; font-weight: 700;
-  padding: 1px 6px; border-radius: 100px; min-width: 18px;
-  text-align: center; display: inline-flex; align-items: center; justify-content: center;
-}
 </style>
 </body>
 </html>

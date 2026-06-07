@@ -183,14 +183,15 @@ async function loadInbox() {
     const preview = lastMsg
       ? (lastMsg.content.length > 55 ? lastMsg.content.slice(0, 55) + '…' : lastMsg.content)
       : 'No messages yet';
-    const timeAgo = lastMsg ? formatDate(lastMsg.created_at) : '';
+    const lastMsgTime = lastMsg ? timeAgo(lastMsg.created_at) : '';
+    const lastMsgAbs  = lastMsg ? formatDate(lastMsg.created_at) + ' ' + formatTime(lastMsg.created_at) : '';
     return `
       <div class="inbox-client-row" id="row-${c.id}" onclick="selectClient('${c.id}')">
         <div class="inbox-avatar">${initials}</div>
         <div class="inbox-client-info">
           <div class="inbox-client-top">
             <span class="inbox-client-name">${c.full_name || 'Unnamed Client'}</span>
-            <span class="inbox-time">${timeAgo}</span>
+            <span class="inbox-time" title="${lastMsgAbs}">${lastMsgTime}</span>
           </div>
           ${c.business_name ? `<div class="inbox-client-biz">${c.business_name}</div>` : ''}
           <div class="inbox-preview">${escHtml(preview)}</div>
