@@ -397,6 +397,7 @@ async function updateProjectStatus(id, status) {
 async function updateProjectProgress(id, value) {
   const pct = Math.min(100, Math.max(0, parseInt(value) || 0));
   await supabase.from('projects').update({ progress: pct, updated_at: new Date().toISOString() }).eq('id', id);
+  loadProjects();
 }
 
 async function deleteProject(id) {
@@ -444,6 +445,7 @@ async function sendAdminMessage() {
 
 function handleMsgKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAdminMessage(); }
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendAdminMessage(); }
 }
 
 // ── SCHEDULE ─────────────────────────────────────────────────────────────────
@@ -472,6 +474,7 @@ async function loadSchedule() {
       </div>
       <div style="display:flex;gap:6px;">
         ${e.status==='upcoming' ? `<button class="btn btn-outline btn-sm" onclick="markEventDone('${e.id}')">Done</button>` : ''}
+        ${e.status==='upcoming' ? `<button class="btn btn-sm" style="background:rgba(251,191,36,0.1);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);" onclick="markEventCancelled('${e.id}')">Cancel</button>` : ''}
         <button class="btn btn-danger btn-sm" onclick="deleteEvent('${e.id}')">Delete</button>
       </div>
     </div>`;
@@ -494,14 +497,26 @@ async function addEvent() {
 }
 
 async function markEventDone(id) {
+  const { data: ev } = await supabase.from('schedule_items').select('title').eq('id', id).single();
   await supabase.from('schedule_items').update({ status:'completed' }).eq('id', id);
+  logActivity(clientId, 'admin', 'Marked event complete', 'schedule', ev?.title);
   showToast('Marked complete');
+  loadSchedule();
+}
+
+async function markEventCancelled(id) {
+  const { data: ev } = await supabase.from('schedule_items').select('title').eq('id', id).single();
+  await supabase.from('schedule_items').update({ status:'cancelled' }).eq('id', id);
+  logActivity(clientId, 'admin', 'Cancelled event', 'schedule', ev?.title);
+  showToast('Event cancelled');
   loadSchedule();
 }
 
 async function deleteEvent(id) {
   if (!confirm('Delete this event?')) return;
+  const { data: ev } = await supabase.from('schedule_items').select('title').eq('id', id).single();
   await supabase.from('schedule_items').delete().eq('id', id);
+  logActivity(clientId, 'admin', 'Deleted event', 'schedule', ev?.title);
   showToast('Event deleted');
   loadSchedule();
 }
@@ -737,13 +752,14 @@ async function loadActivity() {
     const icon  = entityIcon[a.entity_type] || '•';
     const actor = a.actor_role === 'admin' ? '<span style="color:var(--blue-lt);font-weight:600;">You</span>' : '<span style="color:var(--gray-lt);font-weight:600;">Client</span>';
     const name  = a.entity_name ? `<span style="color:var(--gray);"> — ${a.entity_name}</span>` : '';
+    const rel   = timeAgo(a.created_at);
     const time  = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
     return `<div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:0.9rem;flex-shrink:0;">${icon}</span>
       <div style="flex:1;min-width:0;">
         <span style="font-size:0.85rem;color:var(--white);">${actor} ${a.action}</span>${name}
       </div>
-      <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;">${time}</div>
+      <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;" title="${time}">${rel}</div>
     </div>`;
   }).join('').replace(/<div[^>]*>.*<\/div>(?=\s*$)/, m => m.replace('border-bottom:1px solid var(--border)', 'border-bottom:none'));
 }

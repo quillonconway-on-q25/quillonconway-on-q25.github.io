@@ -175,6 +175,7 @@
 const statusProgress = { not_started: 5, in_progress: 50, review: 80, complete: 100 };
 const statusLabel    = { not_started: 'Not Started', in_progress: 'In Progress', review: 'In Review', complete: 'Complete' };
 const statusBadge    = { not_started: 'badge-gray', in_progress: 'badge-blue', review: 'badge-yellow', complete: 'badge-green' };
+let _bannerShown = false;
 
 (async () => {
   const session = await requireAuth();
@@ -220,8 +221,9 @@ async function loadDashboardData(uid) {
   document.getElementById('statMessages').textContent = unreadCount;
   document.getElementById('statProjects').textContent = projectCount;
 
-  // Show getting started banner for brand new clients
-  if (fileCount === 0 && eventCount === 0 && projectCount === 0) {
+  // Show getting started banner for brand new clients (only once per page load)
+  if (!_bannerShown && fileCount === 0 && eventCount === 0 && projectCount === 0) {
+    _bannerShown = true;
     const banner = document.createElement('div');
     banner.style.cssText = 'background:rgba(59,110,245,0.08);border:1px solid rgba(59,110,245,0.2);border-radius:14px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;gap:16px;';
     banner.innerHTML = `
@@ -263,7 +265,7 @@ async function loadDashboardData(uid) {
   if (msgs?.length) {
     document.getElementById('messagesPreview').innerHTML = msgs.reverse().map(m => `
       <div class="message-bubble ${m.is_from_admin ? 'from-admin' : 'from-client'}">
-        <div class="bubble-content">${m.content}</div>
+        <div class="bubble-content">${escHtml(m.content)}</div>
         <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${formatDate(m.created_at)}</div>
       </div>`).join('');
   } else {
@@ -314,14 +316,15 @@ async function loadDashboardData(uid) {
     document.getElementById('activityFeed').innerHTML = activity.map(a => {
       const icon  = entityIcon[a.entity_type] || '•';
       const actor = a.actor_role === 'admin' ? 'ON-Q25' : 'You';
-      const time  = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      const rel   = timeAgo(a.created_at);
+      const abs   = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
       return `<div style="display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);">
         <span style="flex-shrink:0;">${icon}</span>
         <div style="flex:1;font-size:0.83rem;color:var(--off-white);">
           <span style="color:var(--gray-lt);font-weight:600;">${actor}</span> ${a.action}
           ${a.entity_name ? `<span style="color:var(--gray);"> — ${a.entity_name}</span>` : ''}
         </div>
-        <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;">${time}</div>
+        <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;" title="${abs}">${rel}</div>
       </div>`;
     }).join('');
   }

@@ -269,6 +269,7 @@ async function uploadFile(file) {
 
   bar.style.width = '100%'; pct.textContent = '100%';
   setTimeout(() => prog.classList.remove('visible'), 600);
+  logActivity(currentUid, 'client', 'Uploaded file', 'file', file.name);
   showToast(`${file.name} uploaded`);
   loadFiles();
 }
