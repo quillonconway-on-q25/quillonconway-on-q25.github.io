@@ -93,9 +93,9 @@
 </div>
 
 <!-- REQUEST CHANGES MODAL -->
-<div id="changesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border:1px solid var(--border-md);border-radius:16px;padding:32px;width:100%;max-width:460px;margin:24px;">
-    <h2 style="font-size:1rem;font-weight:700;margin-bottom:6px;">Request Changes</h2>
+<div id="changesModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:460px;">
+    <h2>Request Changes</h2>
     <p style="font-size:0.82rem;color:var(--gray);margin-bottom:20px;">Let ON-Q25 know what you'd like adjusted.</p>
     <input type="hidden" id="changesFileId" />
     <textarea id="changesNote" class="form-textarea" placeholder="Describe what needs to change…" style="min-height:100px;"></textarea>
@@ -233,10 +233,10 @@ async function approveFile(id) {
 function openChangesModal(id) {
   document.getElementById('changesFileId').value = id;
   document.getElementById('changesNote').value   = '';
-  document.getElementById('changesModal').style.display = 'flex';
+  document.getElementById('changesModal').classList.add('open');
 }
 function closeChangesModal() {
-  document.getElementById('changesModal').style.display = 'none';
+  document.getElementById('changesModal').classList.remove('open');
 }
 async function submitChanges() {
   const id   = document.getElementById('changesFileId').value;
@@ -251,6 +251,7 @@ async function submitChanges() {
 document.getElementById('changesModal').addEventListener('click', e => {
   if (e.target === e.currentTarget) closeChangesModal();
 });
+
 
 async function uploadFile(file) {
   const prog = document.getElementById('uploadProgress');

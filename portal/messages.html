@@ -63,7 +63,7 @@
       </div>
 
       <div class="message-input-row">
-        <textarea id="msgInput" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)"></textarea>
+        <textarea id="msgInput" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,160)+'px'" style="resize:none;overflow-y:auto;"></textarea>
         <button class="btn btn-primary" onclick="sendMessage()">Send</button>
       </div>
     </div>
@@ -121,6 +121,7 @@ async function sendMessage() {
   const content = input.value.trim();
   if (!content) return;
   input.value = '';
+  input.style.height = 'auto';
   const { error } = await supabase.from('messages').insert({
     client_id: currentUid, content, author_id: currentUid, is_from_admin: false
   });

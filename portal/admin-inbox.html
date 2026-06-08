@@ -256,7 +256,7 @@ async function renderMessages(clientId) {
       <div class="bubble-content">${escHtml(m.content)}</div>
       <div class="bubble-meta" title="${formatDate(m.created_at)} ${formatTime(m.created_at)}">${m.is_from_admin ? 'ON-Q25' : 'Client'} · ${timeAgo(m.created_at)}</div>
     </div>`).join('');
-  thread.scrollTop = thread.scrollHeight;
+  requestAnimationFrame(() => { thread.scrollTop = thread.scrollHeight; });
 }
 
 async function sendReply() {

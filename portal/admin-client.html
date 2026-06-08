@@ -133,7 +133,7 @@
     <!-- INVOICES TAB -->
     <div id="tab-invoices" class="tab-panel" style="display:none;">
       <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-        <button class="btn btn-primary" onclick="openModal('invoiceModal')">+ Add Invoice</button>
+        <button class="btn btn-primary" onclick="openModal('invoiceModal'); addLineItem();">+ Add Invoice</button>
       </div>
       <div class="card">
         <div id="invoiceList"></div>
@@ -385,8 +385,18 @@ function showToast(msg, type='success') {
   t.textContent = msg; t.className = `toast ${type} show`;
   setTimeout(() => t.classList.remove('show'), 3500);
 }
+const modalFields = {
+  projectModal:  ['projName','projDesc','projDueDate'],
+  scheduleModal: ['evTitle','evDate','evDesc'],
+  invoiceModal:  ['invTitle','invDueDate','invPdfUrl','invNotes'],
+};
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Clear fields so stale data doesn't persist on next open
+  (modalFields[id] || []).forEach(f => { document.getElementById(f).value = ''; });
+  if (id === 'invoiceModal') { document.getElementById('lineItemsBody').innerHTML = ''; recalcTotal(); }
+}
 
 function switchTab(tab) {
   currentTab = tab;
@@ -462,7 +472,7 @@ async function addProject() {
   const desc    = document.getElementById('projDesc').value.trim();
   const status  = document.getElementById('projStatus').value;
   const dueDate = document.getElementById('projDueDate').value || null;
-  if (!name) return;
+  if (!name) { showToast('Project name is required', 'error'); return; }
   await supabase.from('projects').insert({ client_id: clientId, name, description: desc||null, status, due_date: dueDate });
   closeModal('projectModal');
   ['projName','projDesc','projDueDate'].forEach(id => document.getElementById(id).value = '');
@@ -484,6 +494,7 @@ async function updateProjectStatus(id, status) {
 async function updateProjectProgress(id, value) {
   const pct = Math.min(100, Math.max(0, parseInt(value) || 0));
   await supabase.from('projects').update({ progress: pct, updated_at: new Date().toISOString() }).eq('id', id);
+  showToast(`Progress set to ${pct}%`);
   loadProjects();
 }
 
@@ -573,7 +584,8 @@ async function addEvent() {
   const title = document.getElementById('evTitle').value.trim();
   const date  = document.getElementById('evDate').value;
   const desc  = document.getElementById('evDesc').value.trim();
-  if (!title || !date) return;
+  if (!title) { showToast('Event title is required', 'error'); return; }
+  if (!date)  { showToast('Event date is required', 'error'); return; }
   await supabase.from('schedule_items').insert({ client_id: clientId, title, scheduled_date: date, description: desc||null, status:'upcoming' });
   logActivity(clientId, 'admin', 'Added event', 'schedule', title);
   closeModal('scheduleModal');
@@ -845,14 +857,14 @@ async function loadActivity() {
     const name  = a.entity_name ? `<span style="color:var(--gray);"> — ${a.entity_name}</span>` : '';
     const rel   = timeAgo(a.created_at);
     const time  = new Date(a.created_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
-    return `<div style="display:flex;align-items:baseline;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+    return `<div class="activity-row">
       <span style="font-size:0.9rem;flex-shrink:0;">${icon}</span>
       <div style="flex:1;min-width:0;">
         <span style="font-size:0.85rem;color:var(--white);">${actor} ${a.action}</span>${name}
       </div>
       <div style="font-size:0.72rem;color:var(--gray);flex-shrink:0;" title="${time}">${rel}</div>
     </div>`;
-  }).join('').replace(/<div[^>]*>.*<\/div>(?=\s*$)/, m => m.replace('border-bottom:1px solid var(--border)', 'border-bottom:none'));
+  }).join('');
 }
 
 // ── EDIT PROJECT ─────────────────────────────────────────────────────────────
@@ -987,6 +999,11 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 }
 .admin-tab:hover { color: var(--white); background: var(--surface2); }
 .admin-tab.active { background: var(--blue); color: var(--white); }
+.activity-row {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.activity-row:last-child { border-bottom: none; }
 </style>
 </body>
 </html>

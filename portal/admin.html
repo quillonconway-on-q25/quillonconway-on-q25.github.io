@@ -211,7 +211,10 @@ function showToast(msg, type='success') {
   t.textContent = msg; t.className = `toast ${type} show`;
   setTimeout(() => t.classList.remove('show'), 3500);
 }
-function openInviteModal()  { document.getElementById('inviteModal').classList.add('open'); }
+function openInviteModal()  {
+  document.getElementById('invitePassword').value = generatePassword();
+  document.getElementById('inviteModal').classList.add('open');
+}
 function closeInviteModal() { document.getElementById('inviteModal').classList.remove('open'); }
 
 function escAttr(s) { return (s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;'); }
