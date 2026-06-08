@@ -249,6 +249,7 @@ function openEditModal(id, title, scheduledDate, desc) {
 function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
 const statusBadge = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
+const statusLabel = { upcoming:'Upcoming', completed:'Completed', cancelled:'Cancelled' };
 
 async function loadSchedule() {
   const { data, error } = await supabase.from('schedule_items').select('*').eq('client_id', currentUid).order('scheduled_date');
@@ -271,7 +272,7 @@ async function loadSchedule() {
       <div class="schedule-details" style="flex:1;">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div class="schedule-title">${escHtml(e.title)}</div>
-          <span class="badge ${statusBadge[e.status]||'badge-gray'}">${e.status}</span>
+          <span class="badge ${statusBadge[e.status]||'badge-gray'}">${statusLabel[e.status]||e.status}</span>
         </div>
         <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
         ${e.description ? `<div class="schedule-desc">${escHtml(e.description)}</div>` : ''}
@@ -288,13 +289,17 @@ async function loadSchedule() {
 }
 
 async function markDone(id) {
+  const { data: ev } = await supabase.from('schedule_items').select('title').eq('id', id).single();
   await supabase.from('schedule_items').update({ status: 'completed' }).eq('id', id);
+  logActivity(currentUid, 'client', 'Marked event complete', 'schedule', ev?.title);
   showToast('Marked as completed'); loadSchedule();
 }
 
 async function deleteEvent(id) {
   if (!confirm('Delete this event?')) return;
+  const { data: ev } = await supabase.from('schedule_items').select('title').eq('id', id).single();
   await supabase.from('schedule_items').delete().eq('id', id);
+  logActivity(currentUid, 'client', 'Deleted event', 'schedule', ev?.title);
   showToast('Event deleted'); loadSchedule();
 }
 

@@ -205,11 +205,14 @@ function showToast(msg, type = 'success') {
     if (error) {
       showToast(error.message, 'error');
     } else {
-      // Update nav immediately
-      const navName = document.getElementById('navName');
+      // Update nav immediately (sidebar + mobile header)
+      const displayName = full_name || session.user.email;
+      const navName    = document.getElementById('navName');
       const navInitial = document.getElementById('navInitial');
-      if (navName) navName.textContent = full_name || session.user.email;
-      if (navInitial) navInitial.textContent = (full_name || session.user.email).charAt(0).toUpperCase();
+      const mobileInit = document.getElementById('mobileInitial');
+      if (navName)    navName.textContent    = displayName;
+      if (navInitial) navInitial.textContent = displayName.charAt(0).toUpperCase();
+      if (mobileInit) mobileInit.textContent = displayName.charAt(0).toUpperCase();
       showToast('Profile updated');
     }
   });

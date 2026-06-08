@@ -93,8 +93,8 @@ function buildProjectCard(p) {
   return `<div class="card">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
       <div style="flex:1;min-width:0;">
-        <div style="font-size:1rem;font-weight:700;">${p.name}</div>
-        ${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:4px;">${p.description}</div>` : ''}
+        <div style="font-size:1rem;font-weight:700;">${escHtml(p.name)}</div>
+        ${p.description ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:4px;">${escHtml(p.description)}</div>` : ''}
       </div>
       <span class="badge ${statusBadge[p.status]||'badge-gray'}" style="flex-shrink:0;margin-left:10px;">${statusLabel[p.status]||p.status}</span>
     </div>

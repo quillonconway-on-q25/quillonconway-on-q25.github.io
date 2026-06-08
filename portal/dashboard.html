@@ -291,8 +291,8 @@ async function loadDashboardData(uid) {
         : '';
       return `<div class="project-row">
         <div style="flex:1;min-width:0;">
-          <div class="project-name">${p.name}</div>
-          ${p.description ? `<div class="project-sub">${p.description}</div>` : ''}
+          <div class="project-name">${escHtml(p.name)}</div>
+          ${p.description ? `<div class="project-sub">${escHtml(p.description)}</div>` : ''}
           ${dueStr}
         </div>
         <div class="progress-bar-wrap">

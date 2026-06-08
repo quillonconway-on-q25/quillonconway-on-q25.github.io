@@ -542,7 +542,8 @@ async function loadSchedule() {
     el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📅</div><h3>No events</h3><p>Add a meeting or deadline for this client.</p></div>`;
     return;
   }
-  const statusBadgeMap = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
+  const statusBadgeMap  = { upcoming:'badge-blue', completed:'badge-green', cancelled:'badge-gray' };
+  const statusLabelMap  = { upcoming:'Upcoming', completed:'Completed', cancelled:'Cancelled' };
   el.innerHTML = data.map(e => {
     const d = new Date(e.scheduled_date);
     return `<div class="schedule-item">
@@ -553,7 +554,7 @@ async function loadSchedule() {
       <div class="schedule-details" style="flex:1;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <div class="schedule-title">${e.title}</div>
-          <span class="badge ${statusBadgeMap[e.status]||'badge-gray'}">${e.status}</span>
+          <span class="badge ${statusBadgeMap[e.status]||'badge-gray'}">${statusLabelMap[e.status]||e.status}</span>
         </div>
         <div class="schedule-time">${formatTime(e.scheduled_date)} · ${formatDate(e.scheduled_date)}</div>
         ${e.description ? `<div class="schedule-desc">${e.description}</div>` : ''}

@@ -88,9 +88,9 @@
 let currentUid = null;
 
 async function loadMessages() {
+  const thread = document.getElementById('messageThread');
   const { data, error } = await supabase.from('messages').select('*').eq('client_id', currentUid).order('created_at');
   if (error) { thread.innerHTML = errorHtml; return; }
-  const thread = document.getElementById('messageThread');
   if (!data?.length) {
     thread.innerHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💬</div><h3>No messages yet</h3><p>Send a message to the ON-Q25 team below.</p></div>`;
     return;
@@ -98,7 +98,7 @@ async function loadMessages() {
   thread.innerHTML = data.map(m => `
     <div class="message-bubble ${m.is_from_admin ? 'from-admin' : 'from-client'}">
       <div class="bubble-content">${escHtml(m.content)}</div>
-      <div class="bubble-meta">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${formatDate(m.created_at)} ${formatTime(m.created_at)}</div>
+      <div class="bubble-meta" title="${formatDate(m.created_at)} ${formatTime(m.created_at)}">${m.is_from_admin ? 'ON-Q25' : 'You'} · ${timeAgo(m.created_at)}</div>
     </div>`).join('');
   requestAnimationFrame(() => { thread.scrollTop = thread.scrollHeight; });
 

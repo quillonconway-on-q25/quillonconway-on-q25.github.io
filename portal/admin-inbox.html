@@ -91,7 +91,7 @@
           <p style="font-size:0.8rem;">Pick a client from the left to read and reply.</p>
         </div>
 
-        <div id="inboxThread" style="display:none;flex:1;display:none;flex-direction:column;min-height:0;">
+        <div id="inboxThread" style="display:none;flex-direction:column;flex:1;min-height:0;">
           <div class="inbox-thread-header" id="threadHeader"></div>
           <div class="message-thread" id="messageThread" style="flex:1;max-height:none;padding:16px 20px;"></div>
           <div class="inbox-reply-bar">
@@ -195,6 +195,12 @@ async function loadInbox() {
         ${needsReply ? `<div class="inbox-dot"></div>` : ''}
       </div>`;
   }).join('');
+
+  // Restore active highlight if a conversation is already open
+  if (activeClientId) {
+    const activeRow = document.getElementById(`row-${activeClientId}`);
+    if (activeRow) activeRow.classList.add('active');
+  }
 }
 
 async function selectClient(clientId) {
